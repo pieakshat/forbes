@@ -2,41 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Forbes Marshall Design System - Professional Corporate Theme */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Corporate Color Palette */
+    --background: 0 0% 98%;
+    --foreground: 210 10% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 10% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 10% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Forbes Marshall Green Brand Colors */
+    --primary: 142 52% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 142 52% 30%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 10% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 210 15% 95%;
+    --muted-foreground: 210 10% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 142 25% 92%;
+    --accent-foreground: 142 52% 20%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --success: 142 52% 45%;
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 15% 88%;
+    --input: 210 15% 88%;
+    --ring: 142 52% 36%;
+
+    --radius: 0.375rem;
+
+    /* Chart Colors */
+    --chart-primary: 142 52% 36%;
+    --chart-secondary: 142 45% 55%;
+    --chart-tertiary: 142 35% 70%;
+    --chart-background: 0 0% 98%;
+    
+    /* Table Colors */
+    --table-header: 210 15% 94%;
+    --table-border: 210 15% 90%;
+    --table-hover: 142 15% 96%;
+    
+    /* Status Colors */
+    --status-excellent: 142 60% 40%;
+    --status-good: 142 45% 50%;
+    --status-average: 38 85% 55%;
+    --status-poor: 0 60% 55%;
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,41 +80,54 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 210 15% 8%;
+    --foreground: 210 10% 90%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 15% 10%;
+    --card-foreground: 210 10% 90%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 210 15% 10%;
+    --popover-foreground: 210 10% 90%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 142 52% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 142 52% 40%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 15% 15%;
+    --secondary-foreground: 210 10% 85%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 15% 12%;
+    --muted-foreground: 210 10% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 210 15% 15%;
+    --accent-foreground: 142 52% 60%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 65% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --success: 142 52% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 15% 20%;
+    --input: 210 15% 20%;
+    --ring: 142 52% 45%;
+    
+    --chart-primary: 142 52% 45%;
+    --chart-secondary: 142 45% 60%;
+    --chart-tertiary: 142 35% 75%;
+    --chart-background: 210 15% 8%;
+    
+    --table-header: 210 15% 12%;
+    --table-border: 210 15% 18%;
+    --table-hover: 142 15% 15%;
+    
+    --status-excellent: 142 60% 50%;
+    --status-good: 142 45% 60%;
+    --status-average: 38 85% 60%;
+    --status-poor: 0 60% 60%;
   }
 }
 
@@ -100,6 +137,53 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Corporate Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  .corporate-heading {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .corporate-subheading {
+    @apply text-lg font-semibold text-muted-foreground;
+  }
+
+  /* Professional Table Styling */
+  .corporate-table {
+    @apply border-collapse border border-table-border bg-card;
+  }
+
+  .corporate-table th {
+    @apply bg-table-header border border-table-border px-4 py-3 text-left font-semibold text-foreground;
+  }
+
+  .corporate-table td {
+    @apply border border-table-border px-4 py-2 text-sm;
+  }
+
+  .corporate-table tr:hover {
+    @apply bg-table-hover;
+  }
+
+  /* Status Indicators */
+  .status-excellent {
+    @apply bg-status-excellent text-white;
+  }
+
+  .status-good {
+    @apply bg-status-good text-white;
+  }
+
+  .status-average {
+    @apply bg-status-average text-white;
+  }
+
+  .status-poor {
+    @apply bg-status-poor text-white;
   }
 }
