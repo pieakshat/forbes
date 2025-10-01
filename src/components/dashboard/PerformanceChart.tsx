@@ -13,20 +13,22 @@ export interface ChartData {
   indexCompletion: number;
   indexedCapacity: number;
   actualCapacity: number;
-  percentage?: number;
+  capacityAt100: number;
+  capacityWithAbs: number;
+  percentage: number;
 }
 
 // Mock chart data based on the reference image
 export const mockChartData: ChartData[] = [
-  { name: '1-Aug', indexCompletion: 1982, indexedCapacity: 425, actualCapacity: 305, percentage: 85 },
-  { name: '2-Aug', indexCompletion: 2687, indexedCapacity: 434, actualCapacity: 321, percentage: 119 },
-  { name: '3-Aug', indexCompletion: 2687, indexedCapacity: 448, actualCapacity: 335, percentage: 102 },
-  { name: '4-Aug', indexCompletion: 2687, indexedCapacity: 462, actualCapacity: 348, percentage: 118 },
-  { name: '5-Aug', indexCompletion: 2687, indexedCapacity: 475, actualCapacity: 361, percentage: 131 },
-  { name: '6-Aug', indexCompletion: 2661, indexedCapacity: 488, actualCapacity: 374, percentage: 128 },
-  { name: '7-Aug', indexCompletion: 2661, indexedCapacity: 501, actualCapacity: 387, percentage: 106 },
-  { name: '8-Aug', indexCompletion: 2661, indexedCapacity: 515, actualCapacity: 401, percentage: 133 },
-  { name: '9-Aug', indexCompletion: 2661, indexedCapacity: 528, actualCapacity: 414, percentage: 98 },
+  { name: '1-Sep', indexCompletion: 1982, indexedCapacity: 425, actualCapacity: 305, capacityAt100: 2712, capacityWithAbs: 2450, percentage: 85 },
+  { name: '2-Sep', indexCompletion: 2687, indexedCapacity: 434, actualCapacity: 321, capacityAt100: 2687, capacityWithAbs: 2423, percentage: 119 },
+  { name: '3-Sep', indexCompletion: 2687, indexedCapacity: 448, actualCapacity: 335, capacityAt100: 2687, capacityWithAbs: 2448, percentage: 102 },
+  { name: '4-Sep', indexCompletion: 2687, indexedCapacity: 462, actualCapacity: 348, capacityAt100: 2687, capacityWithAbs: 2487, percentage: 118 },
+  { name: '5-Sep', indexCompletion: 2687, indexedCapacity: 475, actualCapacity: 361, capacityAt100: 2687, capacityWithAbs: 2523, percentage: 131 },
+  { name: '6-Sep', indexCompletion: 2661, indexedCapacity: 488, actualCapacity: 374, capacityAt100: 2661, capacityWithAbs: 2537, percentage: 128 },
+  { name: '7-Sep', indexCompletion: 2661, indexedCapacity: 501, actualCapacity: 387, capacityAt100: 2661, capacityWithAbs: 2549, percentage: 106 },
+  { name: '8-Sep', indexCompletion: 2661, indexedCapacity: 515, actualCapacity: 401, capacityAt100: 2661, capacityWithAbs: 2577, percentage: 123 },
+  { name: '9-Sep', indexCompletion: 2661, indexedCapacity: 528, actualCapacity: 414, capacityAt100: 2661, capacityWithAbs: 2603, percentage: 98 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -60,7 +62,7 @@ export const PerformanceChart = ({
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
             {type === 'combo' ? (
-              <BarChart data={data} margin={{ top: 50, right: 30, left: 20, bottom: 5 }}>
+              <BarChart data={data} margin={{ top: 60, right: 50, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
@@ -77,12 +79,25 @@ export const PerformanceChart = ({
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
+                  domain={[0, 5000]}
+                />
+                <YAxis 
+                  yAxisId="right"
+                  orientation="right"
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  domain={[0, 150]}
+                  tickFormatter={(value) => `${value}%`}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend 
                   verticalAlign="top"
-                  height={36}
+                  align="right"
+                  height={40}
                   iconType="rect"
+                  wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
                 />
                 <ReferenceLine 
                   y={2500} 
@@ -90,56 +105,92 @@ export const PerformanceChart = ({
                   strokeDasharray="5 5"
                   strokeWidth={1}
                 />
+                
+                {/* Stacked Bars - 3 segments */}
                 <Bar 
                   dataKey="indexCompletion" 
                   name="Index_FG completion"
                   fill="hsl(var(--chart-primary))"
-                  stackId="a"
-                  radius={[0, 0, 0, 0]}
+                  stackId="stack"
                 >
                   <LabelList 
                     dataKey="indexCompletion" 
-                    position="inside" 
+                    position="center" 
                     fill="white"
-                    fontSize={11}
+                    fontSize={10}
+                    fontWeight="bold"
                   />
                 </Bar>
                 <Bar 
                   dataKey="indexedCapacity" 
-                  name="Indexed Capacity (at 100%)"
+                  name="Indexed Capacity (middle segment)"
                   fill="hsl(var(--chart-secondary))"
-                  stackId="a"
-                  radius={[0, 0, 0, 0]}
+                  stackId="stack"
                 >
                   <LabelList 
                     dataKey="indexedCapacity" 
-                    position="inside" 
+                    position="center" 
                     fill="white"
-                    fontSize={11}
+                    fontSize={10}
+                    fontWeight="bold"
                   />
                 </Bar>
                 <Bar 
                   dataKey="actualCapacity" 
-                  name="Indexed Capacity (with Abs)"
+                  name="Actual Capacity (top segment)"
                   fill="hsl(var(--chart-tertiary))"
-                  stackId="a"
-                  radius={[2, 2, 0, 0]}
+                  stackId="stack"
+                  radius={[4, 4, 0, 0]}
                 >
                   <LabelList 
                     dataKey="actualCapacity" 
-                    position="inside" 
+                    position="center" 
                     fill="white"
-                    fontSize={11}
+                    fontSize={10}
+                    fontWeight="bold"
                   />
                 </Bar>
+
+                {/* Line 1: Indexed Capacity at 100% (Black dots) */}
+                <Line 
+                  type="monotone" 
+                  dataKey="capacityAt100" 
+                  name="Indexed Capacity (at 100%)"
+                  stroke="hsl(var(--foreground))"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 4, fill: "hsl(var(--foreground))", strokeWidth: 2, stroke: "white" }}
+                >
+                  <LabelList 
+                    dataKey="capacityAt100" 
+                    position="top"
+                    fill="hsl(var(--foreground))"
+                    fontSize={10}
+                    fontWeight="bold"
+                    offset={8}
+                  />
+                </Line>
+
+                {/* Line 2: Indexed Capacity with Actual Absenteeism (Red dots) */}
+                <Line 
+                  type="monotone" 
+                  dataKey="capacityWithAbs" 
+                  name="Indexed Capacity (with Actual Absenteeism)"
+                  stroke="hsl(var(--destructive))"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  dot={{ r: 4, fill: "hsl(var(--destructive))", strokeWidth: 2, stroke: "white" }}
+                />
+
+                {/* Line 3: % Capacity Utilization (Blue line with percentage) */}
                 <Line 
                   type="monotone" 
                   dataKey="percentage" 
-                  name="% Capacity Utilization"
+                  name="% Capacity Utilization with Absenteeism"
                   stroke="hsl(var(--chart-accent))"
-                  strokeWidth={2}
-                  dot={{ r: 5, fill: "hsl(var(--chart-accent))", strokeWidth: 2 }}
-                  yAxisId={1}
+                  strokeWidth={2.5}
+                  dot={{ r: 5, fill: "hsl(var(--chart-accent))", strokeWidth: 2, stroke: "white" }}
+                  yAxisId="right"
                 >
                   <LabelList 
                     dataKey="percentage" 
@@ -148,17 +199,9 @@ export const PerformanceChart = ({
                     fill="hsl(var(--chart-accent))"
                     fontSize={11}
                     fontWeight="bold"
+                    offset={15}
                   />
                 </Line>
-                <YAxis 
-                  yAxisId={1}
-                  orientation="right"
-                  stroke="hsl(var(--muted-foreground))"
-                  fontSize={12}
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `${value}%`}
-                />
               </BarChart>
             ) : type === 'bar' ? (
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>

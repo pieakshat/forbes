@@ -167,7 +167,7 @@ const Dashboard = () => {
                 />
                 
                 <PerformanceChart 
-                  title="Performance & Capacity Utilization Trend"
+                  title={`${selectedHierarchy.product} Total - September 2025`}
                   data={mockChartData}
                   type="combo"
                 />
