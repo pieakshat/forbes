@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 interface PerformanceChartProps {
   title: string;
   data: ChartData[];
-  type?: 'bar' | 'line';
+  type?: 'bar' | 'line' | 'combo';
   showLegend?: boolean;
 }
 
@@ -80,7 +80,70 @@ export const PerformanceChart = ({
       <CardContent>
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            {type === 'bar' ? (
+            {type === 'combo' ? (
+              <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <YAxis 
+                  stroke="hsl(var(--muted-foreground))"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip content={<CustomTooltip />} />
+                {showLegend && (
+                  <Legend 
+                    wrapperStyle={{ paddingTop: '20px' }}
+                    iconType="rect"
+                  />
+                )}
+                <Bar 
+                  dataKey="indexCompletion" 
+                  name="Index_FG completion"
+                  fill="hsl(var(--chart-primary))"
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar 
+                  dataKey="indexedCapacity" 
+                  name="Indexed Capacity (at 100%)"
+                  fill="hsl(var(--chart-secondary))"
+                  radius={[2, 2, 0, 0]}
+                />
+                <Bar 
+                  dataKey="actualCapacity" 
+                  name="Indexed Capacity (with Abs)"
+                  fill="hsl(var(--chart-tertiary))"
+                  radius={[2, 2, 0, 0]}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="indexCompletion" 
+                  stroke="hsl(var(--chart-primary))"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "hsl(var(--chart-primary))" }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="indexedCapacity" 
+                  stroke="hsl(var(--chart-secondary))"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "hsl(var(--chart-secondary))" }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="actualCapacity" 
+                  stroke="hsl(var(--chart-tertiary))"
+                  strokeWidth={2}
+                  dot={{ r: 4, fill: "hsl(var(--chart-tertiary))" }}
+                />
+              </BarChart>
+            ) : type === 'bar' ? (
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 

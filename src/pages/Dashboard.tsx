@@ -166,18 +166,11 @@ const Dashboard = () => {
                   data={mockTableData} 
                 />
                 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <PerformanceChart 
-                    title="Daily Performance Trend"
-                    data={mockChartData}
-                    type="bar"
-                  />
-                  <PerformanceChart 
-                    title="Capacity Utilization Trend"
-                    data={mockChartData}
-                    type="line"
-                  />
-                </div>
+                <PerformanceChart 
+                  title="Performance & Capacity Utilization Trend"
+                  data={mockChartData}
+                  type="combo"
+                />
               </>
             ) : (
               <Card>
