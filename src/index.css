@@ -49,6 +49,7 @@
     --chart-primary: 142 52% 36%;
     --chart-secondary: 142 45% 55%;
     --chart-tertiary: 142 35% 70%;
+    --chart-accent: 210 85% 45%;
     --chart-background: 0 0% 98%;
     
     /* Table Colors */
@@ -118,6 +119,7 @@
     --chart-primary: 142 52% 45%;
     --chart-secondary: 142 45% 60%;
     --chart-tertiary: 142 35% 75%;
+    --chart-accent: 210 85% 55%;
     --chart-background: 210 15% 8%;
     
     --table-header: 210 15% 12%;
