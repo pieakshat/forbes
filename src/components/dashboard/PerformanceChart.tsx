@@ -10,9 +10,7 @@ interface PerformanceChartProps {
 
 export interface ChartData {
   name: string;
-  indexCompletion: number;
-  indexedCapacity: number;
-  actualCapacity: number;
+  indexFGCompletion: number;
   capacityAt100: number;
   capacityWithAbs: number;
   percentage: number;
@@ -20,15 +18,15 @@ export interface ChartData {
 
 // Mock chart data based on the reference image
 export const mockChartData: ChartData[] = [
-  { name: '1-Sep', indexCompletion: 1982, indexedCapacity: 425, actualCapacity: 305, capacityAt100: 2712, capacityWithAbs: 2450, percentage: 85 },
-  { name: '2-Sep', indexCompletion: 2687, indexedCapacity: 434, actualCapacity: 321, capacityAt100: 2687, capacityWithAbs: 2423, percentage: 119 },
-  { name: '3-Sep', indexCompletion: 2687, indexedCapacity: 448, actualCapacity: 335, capacityAt100: 2687, capacityWithAbs: 2448, percentage: 102 },
-  { name: '4-Sep', indexCompletion: 2687, indexedCapacity: 462, actualCapacity: 348, capacityAt100: 2687, capacityWithAbs: 2487, percentage: 118 },
-  { name: '5-Sep', indexCompletion: 2687, indexedCapacity: 475, actualCapacity: 361, capacityAt100: 2687, capacityWithAbs: 2523, percentage: 131 },
-  { name: '6-Sep', indexCompletion: 2661, indexedCapacity: 488, actualCapacity: 374, capacityAt100: 2661, capacityWithAbs: 2537, percentage: 128 },
-  { name: '7-Sep', indexCompletion: 2661, indexedCapacity: 501, actualCapacity: 387, capacityAt100: 2661, capacityWithAbs: 2549, percentage: 106 },
-  { name: '8-Sep', indexCompletion: 2661, indexedCapacity: 515, actualCapacity: 401, capacityAt100: 2661, capacityWithAbs: 2577, percentage: 123 },
-  { name: '9-Sep', indexCompletion: 2661, indexedCapacity: 528, actualCapacity: 414, capacityAt100: 2661, capacityWithAbs: 2603, percentage: 98 },
+  { name: '1-Sep', indexFGCompletion: 1982, capacityAt100: 2712, capacityWithAbs: 2450, percentage: 85 },
+  { name: '2-Sep', indexFGCompletion: 2687, capacityAt100: 2687, capacityWithAbs: 2423, percentage: 119 },
+  { name: '3-Sep', indexFGCompletion: 2687, capacityAt100: 2687, capacityWithAbs: 2448, percentage: 102 },
+  { name: '4-Sep', indexFGCompletion: 2687, capacityAt100: 2687, capacityWithAbs: 2487, percentage: 118 },
+  { name: '5-Sep', indexFGCompletion: 2687, capacityAt100: 2687, capacityWithAbs: 2523, percentage: 131 },
+  { name: '6-Sep', indexFGCompletion: 2661, capacityAt100: 2661, capacityWithAbs: 2537, percentage: 128 },
+  { name: '7-Sep', indexFGCompletion: 2661, capacityAt100: 2661, capacityWithAbs: 2549, percentage: 106 },
+  { name: '8-Sep', indexFGCompletion: 2661, capacityAt100: 2661, capacityWithAbs: 2577, percentage: 123 },
+  { name: '9-Sep', indexFGCompletion: 2661, capacityAt100: 2661, capacityWithAbs: 2603, percentage: 98 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -106,48 +104,20 @@ export const PerformanceChart = ({
                   strokeWidth={1}
                 />
                 
-                {/* Stacked Bars - 3 segments */}
+                {/* Bar Graph - Index_FG completion (ONE index) */}
                 <Bar 
-                  dataKey="indexCompletion" 
+                  dataKey="indexFGCompletion" 
                   name="Index_FG completion"
                   fill="hsl(var(--chart-primary))"
-                  stackId="stack"
-                >
-                  <LabelList 
-                    dataKey="indexCompletion" 
-                    position="center" 
-                    fill="white"
-                    fontSize={10}
-                    fontWeight="bold"
-                  />
-                </Bar>
-                <Bar 
-                  dataKey="indexedCapacity" 
-                  name="Indexed Capacity (middle segment)"
-                  fill="hsl(var(--chart-secondary))"
-                  stackId="stack"
-                >
-                  <LabelList 
-                    dataKey="indexedCapacity" 
-                    position="center" 
-                    fill="white"
-                    fontSize={10}
-                    fontWeight="bold"
-                  />
-                </Bar>
-                <Bar 
-                  dataKey="actualCapacity" 
-                  name="Actual Capacity (top segment)"
-                  fill="hsl(var(--chart-tertiary))"
-                  stackId="stack"
                   radius={[4, 4, 0, 0]}
                 >
                   <LabelList 
-                    dataKey="actualCapacity" 
-                    position="center" 
-                    fill="white"
+                    dataKey="indexFGCompletion" 
+                    position="top" 
+                    fill="hsl(var(--foreground))"
                     fontSize={10}
                     fontWeight="bold"
+                    offset={5}
                   />
                 </Bar>
 
