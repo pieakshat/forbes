@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, Label, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, LineChart, Line, ReferenceLine, Label, LabelList, ComposedChart } from 'recharts';
 
 interface PerformanceChartProps {
   title: string;
@@ -60,7 +60,7 @@ export const PerformanceChart = ({
         <div className="h-96 w-full">
           <ResponsiveContainer width="100%" height="100%">
             {type === 'combo' ? (
-              <BarChart data={data} margin={{ top: 60, right: 50, left: 20, bottom: 60 }}>
+              <ComposedChart data={data} margin={{ top: 60, right: 50, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
@@ -172,7 +172,7 @@ export const PerformanceChart = ({
                     offset={15}
                   />
                 </Line>
-              </BarChart>
+              </ComposedChart>
             ) : type === 'bar' ? (
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
