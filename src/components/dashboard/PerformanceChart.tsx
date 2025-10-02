@@ -57,10 +57,10 @@ export const PerformanceChart = ({
         <CardTitle className="text-xl font-bold text-foreground">{title}</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-96 w-full">
+        <div className="h-[650px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             {type === 'combo' ? (
-              <ComposedChart data={data} margin={{ top: 60, right: 50, left: 20, bottom: 60 }}>
+              <ComposedChart data={data} margin={{ top: 120, right: 50, left: 20, bottom: 60 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
@@ -77,7 +77,7 @@ export const PerformanceChart = ({
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
-                  domain={[0, 5000]}
+                  domain={[0, 3500]}
                 />
                 <YAxis 
                   yAxisId="right"
@@ -93,7 +93,7 @@ export const PerformanceChart = ({
                 <Legend 
                   verticalAlign="top"
                   align="right"
-                  height={40}
+                  height={60}
                   iconType="rect"
                   wrapperStyle={{ paddingTop: '10px', fontSize: '12px' }}
                 />
@@ -117,7 +117,7 @@ export const PerformanceChart = ({
                     fill="hsl(var(--foreground))"
                     fontSize={10}
                     fontWeight="bold"
-                    offset={5}
+                    offset={8}
                   />
                 </Bar>
 
@@ -137,7 +137,7 @@ export const PerformanceChart = ({
                     fill="hsl(var(--foreground))"
                     fontSize={10}
                     fontWeight="bold"
-                    offset={8}
+                    offset={12}
                   />
                 </Line>
 
@@ -169,7 +169,7 @@ export const PerformanceChart = ({
                     fill="hsl(var(--chart-accent))"
                     fontSize={11}
                     fontWeight="bold"
-                    offset={15}
+                    offset={25}
                   />
                 </Line>
               </ComposedChart>
