@@ -110,16 +110,7 @@ export const PerformanceChart = ({
                   name="Index_FG completion"
                   fill="hsl(var(--chart-primary))"
                   radius={[4, 4, 0, 0]}
-                >
-                  <LabelList 
-                    dataKey="indexFGCompletion" 
-                    position="top" 
-                    fill="hsl(var(--foreground))"
-                    fontSize={10}
-                    fontWeight="bold"
-                    offset={8}
-                  />
-                </Bar>
+                />
 
                 {/* Line 1: Indexed Capacity at 100% (Black dots) */}
                 <Line 
@@ -130,16 +121,7 @@ export const PerformanceChart = ({
                   strokeWidth={2}
                   strokeDasharray="5 5"
                   dot={{ r: 4, fill: "hsl(var(--foreground))", strokeWidth: 2, stroke: "white" }}
-                >
-                  <LabelList 
-                    dataKey="capacityAt100" 
-                    position="top"
-                    fill="hsl(var(--foreground))"
-                    fontSize={10}
-                    fontWeight="bold"
-                    offset={12}
-                  />
-                </Line>
+                />
 
                 {/* Line 2: Indexed Capacity with Actual Absenteeism (Red dots) */}
                 <Line 
@@ -161,17 +143,7 @@ export const PerformanceChart = ({
                   strokeWidth={2.5}
                   dot={{ r: 5, fill: "hsl(var(--chart-accent))", strokeWidth: 2, stroke: "white" }}
                   yAxisId="right"
-                >
-                  <LabelList 
-                    dataKey="percentage" 
-                    position="top"
-                    formatter={(value: number) => `${value}%`}
-                    fill="hsl(var(--chart-accent))"
-                    fontSize={11}
-                    fontWeight="bold"
-                    offset={25}
-                  />
-                </Line>
+                />
               </ComposedChart>
             ) : type === 'bar' ? (
               <BarChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
