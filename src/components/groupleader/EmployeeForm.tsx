@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, Plus } from "lucide-react";
-import { Employee } from "@/pages/GroupLeaderPanel";
+import { Employee } from "@/components/views/GroupLeaderPanel";
 import { useToast } from "@/hooks/use-toast";
 
 interface EmployeeFormProps {
@@ -45,7 +45,7 @@ export function EmployeeForm({ employees, onAddEmployee, onUpdateEmployee, onDel
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name || !formData.tokenNumber || !formData.designation || !formData.group) {
       toast({
         title: "Missing Information",
@@ -62,7 +62,7 @@ export function EmployeeForm({ employees, onAddEmployee, onUpdateEmployee, onDel
       onAddEmployee({ ...formData, id: Date.now().toString() });
       toast({ title: "Employee Added", description: `${formData.name} has been added successfully` });
     }
-    
+
     resetForm();
   };
 

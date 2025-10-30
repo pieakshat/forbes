@@ -29,31 +29,7 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    processFiles(droppedFiles);
-  }, []);
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const selectedFiles = Array.from(e.target.files);
-      processFiles(selectedFiles);
-    }
-  };
-
-  const processFiles = (fileList: File[]) => {
+  const processFiles = useCallback((fileList: File[]) => {
     if (!reportType || !plantId) {
       toast({
         title: "Missing Information",
@@ -78,8 +54,8 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
     newFiles.forEach((file, index) => {
       // Simulate upload progress
       const uploadInterval = setInterval(() => {
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
+        setFiles(prev => prev.map(f =>
+          f.id === file.id
             ? { ...f, progress: Math.min(f.progress + 10, 100) }
             : f
         ));
@@ -88,16 +64,16 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
       // Complete upload and start processing
       setTimeout(() => {
         clearInterval(uploadInterval);
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
+        setFiles(prev => prev.map(f =>
+          f.id === file.id
             ? { ...f, status: 'processing', progress: 0 }
             : f
         ));
 
         // Simulate processing
         const processInterval = setInterval(() => {
-          setFiles(prev => prev.map(f => 
-            f.id === file.id 
+          setFiles(prev => prev.map(f =>
+            f.id === file.id
               ? { ...f, progress: Math.min(f.progress + 15, 100) }
               : f
           ));
@@ -106,8 +82,8 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
         // Complete processing
         setTimeout(() => {
           clearInterval(processInterval);
-          setFiles(prev => prev.map(f => 
-            f.id === file.id 
+          setFiles(prev => prev.map(f =>
+            f.id === file.id
               ? { ...f, status: 'completed', progress: 100 }
               : f
           ));
@@ -119,6 +95,30 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
         }, 2000 + index * 500);
       }, 2000 + index * 500);
     });
+  }, [reportType, plantId, toast]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    processFiles(droppedFiles);
+  }, [processFiles]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedFiles = Array.from(e.target.files);
+      processFiles(selectedFiles);
+    }
   };
 
   const removeFile = (fileId: string) => {
@@ -179,7 +179,7 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
               </SelectContent>
             </Select>
           </div>
-          
+
           <div className="space-y-2">
             <Label>Plant</Label>
             <Select value={plantId} onValueChange={setPlantId}>
@@ -199,8 +199,8 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
         {/* File Drop Zone */}
         <div
           className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors
-            ${isDragging 
-              ? 'border-primary bg-primary/10' 
+            ${isDragging
+              ? 'border-primary bg-primary/10'
               : 'border-border hover:border-primary/50'
             }`}
           onDragOver={handleDragOver}

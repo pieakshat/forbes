@@ -1,15 +1,14 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+'use client';
+
 import { Button } from "@/components/ui/button";
-import { 
-  Building2, 
-  LogOut, 
-  User, 
-  Bell, 
+import {
+  Building2,
+  LogOut,
+  User,
+  Bell,
   Settings,
   ChevronDown,
   BarChart3,
-  Upload,
   TrendingUp
 } from "lucide-react";
 import {
@@ -21,31 +20,28 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
 export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
-  const [user, setUser] = useState<any>(null);
-  const navigate = useNavigate();
+  const { user, signOut, loading } = useAuth();
 
-  useEffect(() => {
-    const userData = localStorage.getItem("forbesMarshallUser");
-    if (!userData) {
-      navigate("/");
-      return;
-    }
-    setUser(JSON.parse(userData));
-  }, [navigate]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("forbesMarshallUser");
-    navigate("/");
+  const handleLogout = async () => {
+    await signOut();
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
+  if (loading || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

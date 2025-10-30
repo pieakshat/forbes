@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { AttendanceRecord } from "@/pages/GroupLeaderPanel";
+import { AttendanceRecord } from "@/components/views/GroupLeaderPanel";
 
 interface GroupSummaryProps {
   attendance: AttendanceRecord[];
@@ -9,11 +9,11 @@ interface GroupSummaryProps {
 export function GroupSummary({ attendance }: GroupSummaryProps) {
   // Get unique groups
   const groups = Array.from(new Set(attendance.map(a => a.group))).sort();
-  
+
   // Calculate summary by group and employment type
   const summary = groups.map(group => {
     const groupRecords = attendance.filter(a => a.group === group && a.status === "Present");
-    
+
     return {
       group,
       onRoll: groupRecords.filter(r => r.employmentType === "On-Roll").length,

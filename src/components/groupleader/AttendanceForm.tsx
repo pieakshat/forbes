@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, UserCheck } from "lucide-react";
-import { Employee, AttendanceRecord } from "@/pages/GroupLeaderPanel";
+import { Employee, AttendanceRecord } from "@/components/views/GroupLeaderPanel";
 import { useToast } from "@/hooks/use-toast";
 
 interface AttendanceFormProps {
@@ -23,7 +23,7 @@ export function AttendanceForm({ employees, onAddAttendance, onBulkAddAttendance
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const employee = employees.find(emp => emp.tokenNumber === tokenNumber);
     if (!employee) {
       toast({

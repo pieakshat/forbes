@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { AttendanceRecord } from "@/pages/GroupLeaderPanel";
+import { AttendanceRecord } from "@/components/views/GroupLeaderPanel";
 import { Calendar } from "lucide-react";
 
 interface AttendanceTableProps {
@@ -14,7 +14,7 @@ interface AttendanceTableProps {
 export function AttendanceTable({ attendance }: AttendanceTableProps) {
   const [filterDate, setFilterDate] = useState(new Date().toISOString().split("T")[0]);
 
-  const filteredAttendance = attendance.filter(record => 
+  const filteredAttendance = attendance.filter(record =>
     !filterDate || record.date === filterDate
   );
 

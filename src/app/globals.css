@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Forbes Marshall Design System - Professional Corporate Theme */
+
+@layer base {
+  :root {
+    /* Corporate Color Palette */
+    --background: 0 0% 98%;
+    --foreground: 210 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 210 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 210 10% 15%;
+
+    /* Forbes Marshall Green Brand Colors */
+    --primary: 142 52% 36%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 142 52% 30%;
+
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 210 10% 20%;
+
+    --muted: 210 15% 95%;
+    --muted-foreground: 210 10% 50%;
+
+    --accent: 142 25% 92%;
+    --accent-foreground: 142 52% 20%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 52% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 15% 88%;
+    --input: 210 15% 88%;
+    --ring: 142 52% 36%;
+
+    --radius: 0.375rem;
+
+    /* Chart Colors */
+    --chart-primary: 142 52% 36%;
+    --chart-secondary: 142 45% 55%;
+    --chart-tertiary: 142 35% 70%;
+    --chart-accent: 210 85% 45%;
+    --chart-background: 0 0% 98%;
+    
+    /* Table Colors */
+    --table-header: 210 15% 94%;
+    --table-border: 210 15% 90%;
+    --table-hover: 142 15% 96%;
+    
+    /* Status Colors */
+    --status-excellent: 142 60% 40%;
+    --status-good: 142 45% 50%;
+    --status-average: 38 85% 55%;
+    --status-poor: 0 60% 55%;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 210 15% 8%;
+    --foreground: 210 10% 90%;
+
+    --card: 210 15% 10%;
+    --card-foreground: 210 10% 90%;
+
+    --popover: 210 15% 10%;
+    --popover-foreground: 210 10% 90%;
+
+    --primary: 142 52% 45%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 142 52% 40%;
+
+    --secondary: 210 15% 15%;
+    --secondary-foreground: 210 10% 85%;
+
+    --muted: 210 15% 12%;
+    --muted-foreground: 210 10% 60%;
+
+    --accent: 210 15% 15%;
+    --accent-foreground: 142 52% 60%;
+
+    --destructive: 0 65% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 52% 50%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --border: 210 15% 20%;
+    --input: 210 15% 20%;
+    --ring: 142 52% 45%;
+    
+    --chart-primary: 142 52% 45%;
+    --chart-secondary: 142 45% 60%;
+    --chart-tertiary: 142 35% 75%;
+    --chart-accent: 210 85% 55%;
+    --chart-background: 210 15% 8%;
+    
+    --table-header: 210 15% 12%;
+    --table-border: 210 15% 18%;
+    --table-hover: 142 15% 15%;
+    
+    --status-excellent: 142 60% 50%;
+    --status-good: 142 45% 60%;
+    --status-average: 38 85% 60%;
+    --status-poor: 0 60% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  /* Corporate Typography */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+  }
+
+  .corporate-heading {
+    @apply text-2xl font-bold text-foreground;
+  }
+
+  .corporate-subheading {
+    @apply text-lg font-semibold text-muted-foreground;
+  }
+
+  /* Professional Table Styling */
+  .corporate-table {
+    @apply border-collapse border border-table-border bg-card;
+  }
+
+  .corporate-table th {
+    @apply bg-table-header border border-table-border px-4 py-3 text-left font-semibold text-foreground;
+  }
+
+  .corporate-table td {
+    @apply border border-table-border px-4 py-2 text-sm;
+  }
+
+  .corporate-table tr:hover {
+    @apply bg-table-hover;
+  }
+
+  /* Status Indicators */
+  .status-excellent {
+    @apply bg-status-excellent text-white;
+  }
+
+  .status-good {
+    @apply bg-status-good text-white;
+  }
+
+  .status-average {
+    @apply bg-status-average text-white;
+  }
+
+  .status-poor {
+    @apply bg-status-poor text-white;
+  }
+}

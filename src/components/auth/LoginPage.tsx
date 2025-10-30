@@ -1,51 +1,32 @@
+'use client';
+
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Users, Lock } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { Building2, ShieldCheck } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState<"manager" | "director" | "">("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password || !role) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+
+    if (!email || !password) {
       return;
     }
 
     setLoading(true);
-    
-    // Simulate authentication
-    setTimeout(() => {
-      localStorage.setItem("forbesMarshallUser", JSON.stringify({
-        email,
-        role,
-        authenticated: true
-      }));
-      
-      toast({
-        title: "Login Successful",
-        description: `Welcome to Forbes Marshall Dashboard`,
-      });
-      
-      navigate("/dashboard");
-      setLoading(false);
-    }, 1000);
+
+    // Error handling is done in AuthContext
+    await signIn(email, password);
+
+    setLoading(false);
   };
 
   return (
@@ -68,7 +49,7 @@ export const LoginPage = () => {
               Enter your credentials to access the dashboard
             </CardDescription>
           </CardHeader>
-          
+
           <form onSubmit={handleLogin}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -82,7 +63,7 @@ export const LoginPage = () => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
                 <Input
@@ -94,35 +75,12 @@ export const LoginPage = () => {
                   required
                 />
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="role">Role</Label>
-                <Select value={role} onValueChange={(value: "manager" | "director") => setRole(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select your role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="manager">
-                      <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-2" />
-                        Manager
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="director">
-                      <div className="flex items-center">
-                        <Lock className="w-4 h-4 mr-2" />
-                        Director
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
-            
+
             <CardFooter>
-              <Button 
-                type="submit" 
-                className="w-full" 
+              <Button
+                type="submit"
+                className="w-full"
                 disabled={loading}
               >
                 {loading ? "Signing In..." : "Sign In"}
@@ -130,10 +88,13 @@ export const LoginPage = () => {
             </CardFooter>
           </form>
         </Card>
-        
+
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          <p>Demo Credentials:</p>
-          <p>Email: demo@forbesmarshall.com | Password: demo123</p>
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <ShieldCheck className="w-4 h-4" />
+            <p>Secure Login</p>
+          </div>
+          <p className="text-xs">Your credentials are encrypted and secure</p>
         </div>
       </div>
     </div>
