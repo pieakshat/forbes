@@ -123,7 +123,7 @@ const Dashboard = () => {
         <Tabs defaultValue="overview" className="space-y-6">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="reports" disabled={user?.role !== 'manager'}>
+            <TabsTrigger value="reports" disabled={user?.role !== 'manager' && user?.role !== 'admin'}>
               Upload Reports
             </TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -185,7 +185,7 @@ const Dashboard = () => {
           </TabsContent>
 
           <TabsContent value="reports" className="space-y-6">
-            {user?.role === 'manager' ? (
+            {user?.role === 'manager' || user?.role === 'admin' ? (
               <ReportUpload onUploadComplete={(files) => console.log('Upload complete:', files)} />
             ) : (
               <Card>
@@ -193,7 +193,7 @@ const Dashboard = () => {
                   <AlertTriangle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-xl font-semibold mb-2">Access Restricted</h3>
                   <p className="text-muted-foreground">
-                    Only Managers can upload reports. Please contact your administrator.
+                    Only Managers and Admins can upload reports. Please contact your administrator.
                   </p>
                 </CardContent>
               </Card>

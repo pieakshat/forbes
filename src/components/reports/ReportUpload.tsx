@@ -24,16 +24,15 @@ interface ReportUploadProps {
 
 export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
   const [files, setFiles] = useState<UploadedFile[]>([]);
-  const [reportType, setReportType] = useState("");
-  const [plantId, setPlantId] = useState("");
+  const [reportType, setReportType] = useState("fg_completion"); // Default to FG Completion
   const [isDragging, setIsDragging] = useState(false);
   const { toast } = useToast();
 
-  const processFiles = useCallback((fileList: File[]) => {
-    if (!reportType || !plantId) {
+  const processFiles = useCallback(async (fileList: File[]) => {
+    if (!reportType) {
       toast({
         title: "Missing Information",
-        description: "Please select report type and plant before uploading",
+        description: "Please select report type before uploading",
         variant: "destructive",
       });
       return;
@@ -43,59 +42,117 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
       id: Math.random().toString(36).substr(2, 9),
       name: file.name,
       size: file.size,
-      status: 'uploading',
+      status: 'uploading' as const,
       progress: 0,
       type: reportType
     }));
 
     setFiles(prev => [...prev, ...newFiles]);
 
-    // Simulate file upload and processing
-    newFiles.forEach((file, index) => {
-      // Simulate upload progress
-      const uploadInterval = setInterval(() => {
-        setFiles(prev => prev.map(f =>
-          f.id === file.id
-            ? { ...f, progress: Math.min(f.progress + 10, 100) }
-            : f
-        ));
-      }, 200);
+    // Process each file
+    for (let i = 0; i < fileList.length; i++) {
+      const originalFile = fileList[i];
+      const uploadedFile = newFiles[i];
 
-      // Complete upload and start processing
-      setTimeout(() => {
-        clearInterval(uploadInterval);
+      try {
+        // Update progress
         setFiles(prev => prev.map(f =>
-          f.id === file.id
-            ? { ...f, status: 'processing', progress: 0 }
+          f.id === uploadedFile.id
+            ? { ...f, status: 'uploading' as const, progress: 30 }
             : f
         ));
 
-        // Simulate processing
-        const processInterval = setInterval(() => {
+        // Handle FG Completion CSV uploads
+        if (reportType === 'fg_completion') {
+          const formData = new FormData();
+          formData.append('file', originalFile);
+
           setFiles(prev => prev.map(f =>
-            f.id === file.id
-              ? { ...f, progress: Math.min(f.progress + 15, 100) }
+            f.id === uploadedFile.id
+              ? { ...f, progress: 50 }
               : f
           ));
-        }, 300);
 
-        // Complete processing
-        setTimeout(() => {
-          clearInterval(processInterval);
+          const response = await fetch('/api/upload-fg-completion', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Upload failed');
+          }
+
+          const result = await response.json();
+
           setFiles(prev => prev.map(f =>
-            f.id === file.id
-              ? { ...f, status: 'completed', progress: 100 }
+            f.id === uploadedFile.id
+              ? { ...f, status: 'completed' as const, progress: 100 }
               : f
           ));
 
           toast({
-            title: "File Processed",
-            description: `${file.name} has been successfully processed`,
+            title: "File Processed Successfully",
+            description: `Successfully uploaded ${result.recordsUploaded} records from ${originalFile.name}`,
           });
-        }, 2000 + index * 500);
-      }, 2000 + index * 500);
-    });
-  }, [reportType, plantId, toast]);
+        } else {
+          // Simulate file upload and processing for other report types
+          const uploadInterval = setInterval(() => {
+            setFiles(prev => prev.map(f =>
+              f.id === uploadedFile.id
+                ? { ...f, progress: Math.min(f.progress + 10, 90) }
+                : f
+            ));
+          }, 200);
+
+          setTimeout(() => {
+            clearInterval(uploadInterval);
+            setFiles(prev => prev.map(f =>
+              f.id === uploadedFile.id
+                ? { ...f, status: 'processing' as const, progress: 0 }
+                : f
+            ));
+
+            const processInterval = setInterval(() => {
+              setFiles(prev => prev.map(f =>
+                f.id === uploadedFile.id
+                  ? { ...f, progress: Math.min(f.progress + 15, 100) }
+                  : f
+              ));
+            }, 300);
+
+            setTimeout(() => {
+              clearInterval(processInterval);
+              setFiles(prev => prev.map(f =>
+                f.id === uploadedFile.id
+                  ? { ...f, status: 'completed' as const, progress: 100 }
+                  : f
+              ));
+
+              toast({
+                title: "File Processed",
+                description: `${originalFile.name} has been successfully processed`,
+              });
+            }, 2000);
+          }, 2000);
+        }
+      } catch (error) {
+        setFiles(prev => prev.map(f =>
+          f.id === uploadedFile.id
+            ? { ...f, status: 'error' as const }
+            : f
+        ));
+
+        toast({
+          title: "Upload Failed",
+          description: error instanceof Error ? error.message : 'Failed to upload file',
+          variant: "destructive",
+        });
+      }
+    }
+
+    onUploadComplete(newFiles);
+  }, [reportType, toast, onUploadComplete]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -164,36 +221,20 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Upload Configuration */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label>Report Type</Label>
-            <Select value={reportType} onValueChange={setReportType}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select report type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">Daily Progress Report</SelectItem>
-                <SelectItem value="weekly">Weekly Summary</SelectItem>
-                <SelectItem value="monthly">Monthly Report</SelectItem>
-                <SelectItem value="production">Production Report</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Plant</Label>
-            <Select value={plantId} onValueChange={setPlantId}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select plant" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="plant-a1">Plant A1 - Mumbai</SelectItem>
-                <SelectItem value="plant-a2">Plant A2 - Mumbai</SelectItem>
-                <SelectItem value="plant-b1">Plant B1 - Pune</SelectItem>
-                <SelectItem value="plant-h1">Plant H1 - Chennai</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="space-y-2">
+          <Label>Report Type</Label>
+          <Select value={reportType} onValueChange={setReportType}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select report type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="fg_completion">FG Completion Report (CSV)</SelectItem>
+              <SelectItem value="daily">Daily Progress Report</SelectItem>
+              <SelectItem value="weekly">Weekly Summary</SelectItem>
+              <SelectItem value="monthly">Monthly Report</SelectItem>
+              <SelectItem value="production">Production Report</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {/* File Drop Zone */}
@@ -210,12 +251,15 @@ export const ReportUpload = ({ onUploadComplete }: ReportUploadProps) => {
           <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Drop files here or click to browse</h3>
           <p className="text-muted-foreground mb-4">
-            Supports PDF, Excel, CSV, and image files up to 10MB each
+            {reportType === 'fg_completion'
+              ? 'Upload CSV file for FG Completion Report (up to 50MB)'
+              : 'Supports PDF, Excel, CSV, and image files up to 50MB each'
+            }
           </p>
           <Input
             type="file"
             multiple
-            accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png"
+            accept={reportType === 'fg_completion' ? '.csv' : '.pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png'}
             onChange={handleFileSelect}
             className="hidden"
             id="file-upload"

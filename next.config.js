@@ -12,6 +12,12 @@ const nextConfig = {
         };
         return config;
     },
+    // Configure API routes for file uploads
+    api: {
+        bodyParser: {
+            sizeLimit: '50mb',
+        },
+    },
 };
 
 module.exports = nextConfig;

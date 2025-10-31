@@ -6,7 +6,7 @@ export const dynamic = 'force-dynamic';
 
 export default function GroupLeaderPage() {
     return (
-        <ProtectedRoute allowedRoles={['leader']}>
+        <ProtectedRoute allowedRoles={['leader', 'admin']}>
             <GroupLeaderPanel />
         </ProtectedRoute>
     );

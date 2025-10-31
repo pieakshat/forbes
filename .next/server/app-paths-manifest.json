@@ -1,5 +1,8 @@
 {
+  "/api/attendance/route": "app/api/attendance/route.js",
+  "/api/upload-fg-completion/route": "app/api/upload-fg-completion/route.js",
   "/_not-found/page": "app/_not-found/page.js",
+  "/api/employees/route": "app/api/employees/route.js",
   "/page": "app/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/group-leader/page": "app/group-leader/page.js"

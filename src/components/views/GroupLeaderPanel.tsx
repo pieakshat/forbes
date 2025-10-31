@@ -92,14 +92,15 @@ export default function GroupLeaderPanel() {
 
           <TabsContent value="attendance" className="space-y-4">
             <AttendanceForm
-              employees={employees}
-              onAddAttendance={addAttendance}
-              onBulkAddAttendance={bulkAddAttendance}
+              onAttendanceUpdate={() => {
+                // Refresh attendance table if needed
+                // You can add fetch logic here if needed
+              }}
             />
           </TabsContent>
 
           <TabsContent value="view">
-            <AttendanceTable attendance={attendance} />
+            <AttendanceTable />
           </TabsContent>
 
           <TabsContent value="employees">
