@@ -1,9 +1,0 @@
-{
-  "/api/attendance/route": "/api/attendance",
-  "/api/upload-fg-completion/route": "/api/upload-fg-completion",
-  "/_not-found/page": "/_not-found",
-  "/api/employees/route": "/api/employees",
-  "/page": "/",
-  "/dashboard/page": "/dashboard",
-  "/group-leader/page": "/group-leader"
-}
