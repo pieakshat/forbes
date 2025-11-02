@@ -4,7 +4,7 @@ import { User } from '../auth';
 /**
  * Verify that the user is authenticated and has the required role
  */
-export async function verifyAuth(allowedRoles?: ('manager' | 'admin')[]): Promise<{ user: User | null; error: string | null }> {
+export async function verifyAuth(allowedRoles?: ('leader' | 'manager' | 'admin')[]): Promise<{ user: User | null; error: string | null }> {
     try {
         const supabase = await createClient();
 

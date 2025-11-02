@@ -9,6 +9,14 @@ export interface Employee {
     created_at: string;
 }
 
+export interface EmployeeInput {
+    token_no: string;
+    name: string;
+    group?: string | null;
+    desig?: string | null;
+    role?: string | null;
+}
+
 export interface AttendanceRecord {
     id: number;
     token_no: string;
@@ -47,17 +55,55 @@ export class AttendanceService {
         try {
             const supabase = await createClient();
 
-            const { data, error } = await supabase
+            console.log('Fetching employees from database...');
+
+            // First, let's test if we can access the table at all
+            const { data: testData, error: testError } = await supabase
                 .from('employees')
                 .select('*')
+                .limit(1);
+
+            if (testError) {
+                console.error('Test query error:', testError);
+                console.error('Error code:', testError.code);
+                console.error('Error message:', testError.message);
+                console.error('Error details:', testError.details);
+                console.error('Error hint:', testError.hint);
+
+                // Check if it's an RLS issue
+                if (testError.code === '42501' || testError.message?.includes('permission denied') || testError.message?.includes('policy')) {
+                    return {
+                        success: false,
+                        error: 'Permission denied. Please check RLS (Row Level Security) policies on the employees table. The table may be protected by security policies.',
+                    };
+                }
+
+                return {
+                    success: false,
+                    error: `Failed to fetch employees: ${testError.message} (Code: ${testError.code})`,
+                };
+            }
+
+            // Now fetch all employees with explicit column selection
+            const { data, error } = await supabase
+                .from('employees')
+                .select('token_no, name, group, desig, role, created_at')
                 .order('name', { ascending: true });
 
             if (error) {
                 console.error('Error fetching employees:', error);
+                console.error('Error details:', JSON.stringify(error, null, 2));
                 return {
                     success: false,
                     error: `Failed to fetch employees: ${error.message}`,
                 };
+            }
+
+            console.log(`Successfully fetched ${data?.length || 0} employees from database`);
+            if (data && data.length > 0) {
+                console.log('Sample employee:', JSON.stringify(data[0], null, 2));
+            } else {
+                console.log('No employees found in database. Table exists but is empty.');
             }
 
             return { success: true, data: data || [] };
@@ -269,6 +315,212 @@ export class AttendanceService {
                 success: false,
                 recordsUpdated: 0,
                 errors: [error instanceof Error ? error.message : 'Unknown error'],
+            };
+        }
+    }
+
+    /**
+     * Create a new employee
+     */
+    static async createEmployee(
+        employee: EmployeeInput
+    ): Promise<{
+        success: boolean;
+        data?: Employee;
+        error?: string;
+    }> {
+        try {
+            const supabase = await createClient();
+
+            // Validate required fields
+            if (!employee.token_no || !employee.name) {
+                return {
+                    success: false,
+                    error: 'Token number and name are required',
+                };
+            }
+
+            // Check if employee with same token_no already exists
+            const { data: existing, error: checkError } = await supabase
+                .from('employees')
+                .select('token_no')
+                .eq('token_no', employee.token_no)
+                .single();
+
+            if (existing) {
+                return {
+                    success: false,
+                    error: `Employee with token number ${employee.token_no} already exists`,
+                };
+            }
+
+            // Sanitize input
+            const employeeData = {
+                token_no: employee.token_no.trim(),
+                name: employee.name.trim(),
+                group: employee.group?.trim() || null,
+                desig: employee.desig?.trim() || null,
+                role: employee.role?.trim() || null,
+            };
+
+            // Insert employee
+            const { data, error } = await supabase
+                .from('employees')
+                .insert(employeeData)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error creating employee:', error);
+                return {
+                    success: false,
+                    error: `Failed to create employee: ${error.message}`,
+                };
+            }
+
+            return { success: true, data };
+        } catch (error) {
+            console.error('AttendanceService createEmployee error:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+
+    /**
+     * Update an existing employee
+     */
+    static async updateEmployee(
+        token_no: string,
+        updates: Partial<EmployeeInput>
+    ): Promise<{
+        success: boolean;
+        data?: Employee;
+        error?: string;
+    }> {
+        try {
+            const supabase = await createClient();
+
+            // Check if employee exists
+            const { data: existing, error: checkError } = await supabase
+                .from('employees')
+                .select('token_no')
+                .eq('token_no', token_no)
+                .single();
+
+            if (checkError || !existing) {
+                return {
+                    success: false,
+                    error: `Employee with token number ${token_no} not found`,
+                };
+            }
+
+            // Prepare update data
+            const updateData: any = {};
+
+            if (updates.name !== undefined) {
+                updateData.name = updates.name.trim();
+            }
+            if (updates.group !== undefined) {
+                updateData.group = updates.group?.trim() || null;
+            }
+            if (updates.desig !== undefined) {
+                updateData.desig = updates.desig?.trim() || null;
+            }
+            if (updates.role !== undefined) {
+                updateData.role = updates.role?.trim() || null;
+            }
+
+            // If token_no is being updated, check if new token_no already exists
+            if (updates.token_no && updates.token_no !== token_no) {
+                const { data: duplicate } = await supabase
+                    .from('employees')
+                    .select('token_no')
+                    .eq('token_no', updates.token_no.trim())
+                    .single();
+
+                if (duplicate) {
+                    return {
+                        success: false,
+                        error: `Employee with token number ${updates.token_no} already exists`,
+                    };
+                }
+                updateData.token_no = updates.token_no.trim();
+            }
+
+            // Update employee
+            const { data, error } = await supabase
+                .from('employees')
+                .update(updateData)
+                .eq('token_no', token_no)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Error updating employee:', error);
+                return {
+                    success: false,
+                    error: `Failed to update employee: ${error.message}`,
+                };
+            }
+
+            return { success: true, data };
+        } catch (error) {
+            console.error('AttendanceService updateEmployee error:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+
+    /**
+     * Delete an employee
+     */
+    static async deleteEmployee(
+        token_no: string
+    ): Promise<{
+        success: boolean;
+        error?: string;
+    }> {
+        try {
+            const supabase = await createClient();
+
+            // Check if employee exists
+            const { data: existing, error: checkError } = await supabase
+                .from('employees')
+                .select('token_no')
+                .eq('token_no', token_no)
+                .single();
+
+            if (checkError || !existing) {
+                return {
+                    success: false,
+                    error: `Employee with token number ${token_no} not found`,
+                };
+            }
+
+            // Delete employee (CASCADE will handle related attendance records)
+            const { error } = await supabase
+                .from('employees')
+                .delete()
+                .eq('token_no', token_no);
+
+            if (error) {
+                console.error('Error deleting employee:', error);
+                return {
+                    success: false,
+                    error: `Failed to delete employee: ${error.message}`,
+                };
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('AttendanceService deleteEmployee error:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
             };
         }
     }

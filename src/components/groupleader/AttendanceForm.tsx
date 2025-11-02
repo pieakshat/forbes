@@ -47,8 +47,14 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
   const fetchEmployees = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/employees');
+      const response = await fetch('/api/employees', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      });
       const data = await response.json();
+      console.log('AttendanceForm - Employees fetched:', data.data);
 
       if (data.success && data.data) {
         setEmployees(data.data);
