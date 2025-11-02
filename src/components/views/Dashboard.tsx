@@ -140,20 +140,8 @@ const Dashboard = () => {
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div>
-                        <p className="text-sm text-muted-foreground">City</p>
-                        <p className="font-semibold">{selectedHierarchy.city}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Area</p>
-                        <p className="font-semibold">{selectedHierarchy.area}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Plant</p>
-                        <p className="font-semibold">{selectedHierarchy.plant}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-muted-foreground">Product</p>
-                        <p className="font-semibold">{selectedHierarchy.product}</p>
+                        <p className="text-sm text-muted-foreground">Group</p>
+                        <p className="font-semibold">{selectedHierarchy.group}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -161,12 +149,12 @@ const Dashboard = () => {
 
                 {/* Data Tables and Charts */}
                 <DataTable
-                  title={`${selectedHierarchy.plant} - ${selectedHierarchy.product} - August 2025`}
+                  title={`${selectedHierarchy.group} - August 2025`}
                   data={mockTableData}
                 />
 
                 <PerformanceChart
-                  title={`${selectedHierarchy.product} Total - September 2025`}
+                  title={`${selectedHierarchy.group} Total - September 2025`}
                   data={mockChartData}
                   type="combo"
                 />
@@ -175,9 +163,9 @@ const Dashboard = () => {
               <Card>
                 <CardContent className="p-12 text-center">
                   <Activity className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold mb-2">Select Hierarchy</h3>
+                  <h3 className="text-xl font-semibold mb-2">Select Group</h3>
                   <p className="text-muted-foreground">
-                    Please select City → Area → Plant → Product to view detailed data
+                    Please select a group to view detailed data
                   </p>
                 </CardContent>
               </Card>

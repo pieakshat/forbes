@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmployeeForm } from "@/components/groupleader/EmployeeForm";
@@ -22,7 +23,7 @@ export default function GroupLeaderPanel() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <DashboardLayout>
       <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Group Leader Panel</h1>
@@ -72,6 +73,6 @@ export default function GroupLeaderPanel() {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
