@@ -179,11 +179,11 @@ export class DashboardService {
         }
 
         const absenceByDate = new Map<string, number>();
-        for (const [compositeKey, weight] of attendanceAbsenceMap.entries()) {
+        Array.from(attendanceAbsenceMap.entries()).forEach(([compositeKey, weight]) => {
             const [dateKey] = compositeKey.split('_');
             const current = absenceByDate.get(dateKey) ?? 0;
             absenceByDate.set(dateKey, current + weight);
-        }
+        });
 
         // Fetch FG completion data
         const { data: fgDataRaw, error: fgError } = await supabase
