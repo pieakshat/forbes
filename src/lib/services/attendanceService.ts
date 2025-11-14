@@ -22,6 +22,7 @@ export interface AttendanceRecord {
     token_no: string;
     attendance_date: string;
     status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+    group: string | null;
     check_in: string | null;
     check_out: string | null;
     device_info: string | null;
@@ -36,6 +37,7 @@ export interface AttendanceInput {
     token_no: string;
     attendance_date: string;
     status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+    group?: string | null;
     notes?: string | null;
 }
 
@@ -223,6 +225,10 @@ export class AttendanceService {
                 status: record.status,
                 updated_at: new Date().toISOString(),
             };
+
+            if (record.group !== undefined) {
+                attendanceData.group = record.group;
+            }
 
             if (record.notes !== undefined) {
                 attendanceData.notes = record.notes;

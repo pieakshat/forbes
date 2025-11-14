@@ -31,12 +31,65 @@ const Dashboard = () => {
   const [meta, setMeta] = useState<DashboardMeta | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [aggregatedSummary, setAggregatedSummary] = useState<DashboardSummary | null>(null);
+  const [activeGroupsCount, setActiveGroupsCount] = useState<number | null>(null);
+  const [isLoadingAggregated, setIsLoadingAggregated] = useState(false);
   const { user } = useAuth();
 
   const handleHierarchyChange = (selection: HierarchySelection) => {
     setSelectedHierarchy(selection);
   };
 
+  // Fetch aggregated metrics for all groups (for KPI cards)
+  useEffect(() => {
+    const controller = new AbortController();
+    const fetchAggregatedMetrics = async () => {
+      try {
+        setIsLoadingAggregated(true);
+
+        const now = new Date();
+        const monthValue = now.getMonth() + 1;
+        const yearValue = now.getFullYear();
+
+        const params = new URLSearchParams({
+          month: monthValue.toString(),
+          year: yearValue.toString()
+        });
+
+        const response = await fetch(`/api/dashboard/metrics/all?${params.toString()}`, {
+          method: "GET",
+          signal: controller.signal
+        });
+
+        const payload = await response.json().catch(() => ({}));
+
+        if (!response.ok || !payload?.success) {
+          throw new Error(payload?.error || "Failed to fetch aggregated metrics");
+        }
+
+        const data = payload.data;
+        setAggregatedSummary(data.summary);
+        setActiveGroupsCount(data.activeGroupsCount ?? null);
+      } catch (err) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
+        console.error("Failed to fetch aggregated metrics:", err);
+        setAggregatedSummary(null);
+        setActiveGroupsCount(null);
+      } finally {
+        setIsLoadingAggregated(false);
+      }
+    };
+
+    fetchAggregatedMetrics();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  // Fetch group-specific metrics when a group is selected
   useEffect(() => {
     if (!selectedHierarchy?.group) {
       setTableData(null);
@@ -112,10 +165,14 @@ const Dashboard = () => {
     };
   }, [selectedHierarchy]);
 
-  const overallCompletion = summary?.capacityUtilizationAverage ?? null;
-  const fgCompletionAverage = summary?.indexedFgCompletionAverage ?? null;
-  const manpowerAverage = summary?.manpowerAverage ?? null;
-  const absenteeismAverage = summary?.absenteeismAverage ?? null;
+  // KPI cards always show aggregated data (all groups)
+  // Group-specific data is only used for detailed tables/charts
+  const kpiSummary = aggregatedSummary;
+
+  const overallCompletion = kpiSummary?.capacityUtilizationAverage ?? null;
+  const fgCompletionAverage = kpiSummary?.indexedFgCompletionAverage ?? null;
+  const manpowerAverage = kpiSummary?.manpowerAverage ?? null;
+  const absenteeismAverage = kpiSummary?.absenteeismAverage ?? null;
 
   const selectedPeriodLabel = selectedHierarchy
     ? new Date(
@@ -135,9 +192,9 @@ const Dashboard = () => {
       color: "text-success"
     },
     {
-      title: "Active Plants",
-      value: "15",
-      change: "+1",
+      title: "Active Groups",
+      value: activeGroupsCount !== null ? activeGroupsCount.toString() : "—",
+      change: "—",
       trend: "up",
       icon: Factory,
       color: "text-primary"
@@ -145,7 +202,7 @@ const Dashboard = () => {
     {
       title: "Total Workforce",
       value: manpowerAverage !== null ? Math.round(manpowerAverage).toLocaleString() : "—",
-      change: summary ? `${Math.round(summary.manpowerTotal).toLocaleString()} monthly` : "—",
+      change: kpiSummary ? `${Math.round(kpiSummary.manpowerTotal).toLocaleString()} monthly` : "—",
       trend: "up",
       icon: Users,
       color: "text-primary"
@@ -153,7 +210,7 @@ const Dashboard = () => {
     {
       title: "Avg. Absenteeism",
       value: absenteeismAverage !== null ? `${absenteeismAverage.toFixed(1)}%` : "—",
-      change: summary ? "Monthly avg" : "—",
+      change: kpiSummary ? "Monthly avg" : "—",
       trend: absenteeismAverage !== null && absenteeismAverage > 10 ? "down" : "up",
       icon: AlertTriangle,
       color: "text-warning"
@@ -360,25 +417,19 @@ const Dashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {[
-                      { plant: "Plant A1", efficiency: 96.2, change: "+1.2%" },
-                      { plant: "Plant A2", efficiency: 94.8, change: "+0.8%" },
-                      { plant: "Plant B1", efficiency: 93.5, change: "-0.3%" },
-                      { plant: "Plant H1", efficiency: 95.1, change: "+2.1%" }
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                        <div>
-                          <p className="font-medium">{item.plant}</p>
-                          <p className="text-sm text-muted-foreground">{item.efficiency}% Efficient</p>
-                        </div>
-                        <Badge
-                          variant={item.change.startsWith('+') ? 'default' : 'destructive'}
-                          className="bg-success text-success-foreground"
-                        >
-                          {item.change}
-                        </Badge>
+                    {chartData.length > 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          Select a group to view plant efficiency data
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      <div className="text-center py-8">
+                        <p className="text-muted-foreground">
+                          No efficiency data available. Please select a group to view metrics.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>

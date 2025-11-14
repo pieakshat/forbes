@@ -30,6 +30,8 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
   const [saving, setSaving] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [attendanceStatuses, setAttendanceStatuses] = useState<Record<string, AttendanceStatus>>({});
+  const [attendanceGroups, setAttendanceGroups] = useState<Record<string, string>>({});
+  const [availableGroups, setAvailableGroups] = useState<string[]>([]);
   const [existingAttendance, setExistingAttendance] = useState<Record<string, AttendanceStatus>>({});
 
   // Fetch employees on component mount
@@ -60,10 +62,22 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
         setEmployees(data.data);
         // Initialize statuses for all employees
         const initialStatuses: Record<string, AttendanceStatus> = {};
+        const initialGroups: Record<string, string> = {};
+        const groupsSet = new Set<string>();
+
         data.data.forEach((emp: Employee) => {
           initialStatuses[emp.token_no] = 'present'; // Default to present
+          // Default group from employee record
+          initialGroups[emp.token_no] = emp.group || '';
+          // Collect unique groups
+          if (emp.group) {
+            groupsSet.add(emp.group);
+          }
         });
+
         setAttendanceStatuses(initialStatuses);
+        setAttendanceGroups(initialGroups);
+        setAvailableGroups(Array.from(groupsSet).sort());
       } else {
         toast({
           title: "Error",
@@ -91,8 +105,12 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
       if (data.success && data.data) {
         // Map existing attendance by token_no
         const existing: Record<string, AttendanceStatus> = {};
+        const existingGroups: Record<string, string> = {};
         data.data.forEach((record: any) => {
           existing[record.token_no] = record.status;
+          if (record.group) {
+            existingGroups[record.token_no] = record.group;
+          }
         });
         setExistingAttendance(existing);
 
@@ -101,6 +119,15 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
           const updated = { ...prev };
           Object.keys(existing).forEach(token => {
             updated[token] = existing[token];
+          });
+          return updated;
+        });
+
+        // Update groups with existing values
+        setAttendanceGroups(prev => {
+          const updated = { ...prev };
+          Object.keys(existingGroups).forEach(token => {
+            updated[token] = existingGroups[token];
           });
           return updated;
         });
@@ -117,6 +144,13 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
     }));
   };
 
+  const handleGroupChange = (tokenNo: string, group: string) => {
+    setAttendanceGroups(prev => ({
+      ...prev,
+      [tokenNo]: group,
+    }));
+  };
+
   const handleSaveAttendance = async () => {
     if (employees.length === 0) {
       toast({
@@ -129,11 +163,12 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
 
     setSaving(true);
     try {
-      // Prepare records for all employees with their selected statuses
+      // Prepare records for all employees with their selected statuses and groups
       const records = employees.map(emp => ({
         token_no: emp.token_no,
         attendance_date: date,
         status: attendanceStatuses[emp.token_no] || 'present',
+        group: attendanceGroups[emp.token_no] || emp.group || null,
       }));
 
       const response = await fetch('/api/attendance', {
@@ -343,7 +378,25 @@ export function AttendanceForm({ onAttendanceUpdate }: AttendanceFormProps) {
                       <TableRow key={employee.token_no}>
                         <TableCell className="font-medium">{employee.token_no}</TableCell>
                         <TableCell>{employee.name}</TableCell>
-                        <TableCell>{employee.group || '-'}</TableCell>
+                        <TableCell>
+                          <Select
+                            value={attendanceGroups[employee.token_no] || employee.group || undefined}
+                            onValueChange={(value: string) =>
+                              handleGroupChange(employee.token_no, value)
+                            }
+                          >
+                            <SelectTrigger className="w-32 bg-background">
+                              <SelectValue placeholder="Select group" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-background z-50">
+                              {availableGroups.map((group) => (
+                                <SelectItem key={group} value={group}>
+                                  {group}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell>{employee.desig || '-'}</TableCell>
                         <TableCell className="text-right">
                           <Select

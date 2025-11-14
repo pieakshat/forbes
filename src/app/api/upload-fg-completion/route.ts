@@ -4,7 +4,7 @@ import { FGCompletionService } from '@/lib/services/fgCompletionService';
 
 export async function POST(request: NextRequest) {
     try {
-        // Step 1: Verify authentication - only managers and admins can upload
+
         const { user, error: authError } = await verifyAuth(['manager', 'admin']);
 
         if (authError || !user) {
@@ -25,10 +25,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Step 3: Read file buffer
         const fileBuffer = await file.arrayBuffer();
 
-        // Step 4: Delegate to service layer (all business logic is here)
         const result = await FGCompletionService.uploadCSV(
             fileBuffer,
             file.name,

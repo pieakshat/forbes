@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Package } from "lucide-react";
+import { Package, Loader2 } from "lucide-react";
 
 interface HierarchySelectorProps {
   onSelectionChange: (selection: HierarchySelection) => void;
@@ -14,10 +14,6 @@ export interface HierarchySelection {
   year: number;
 }
 
-const hierarchyData = {
-  groups: ["Group1", "Group2", "Group3", "Group4", "Group5"]
-};
-
 export const HierarchySelector = ({ onSelectionChange }: HierarchySelectorProps) => {
   const now = new Date();
   const currentMonth = now.getMonth() + 1;
@@ -28,6 +24,66 @@ export const HierarchySelector = ({ onSelectionChange }: HierarchySelectorProps)
     month: currentMonth,
     year: currentYear
   });
+
+  const [availableGroups, setAvailableGroups] = useState<string[]>([]);
+  const [loadingGroups, setLoadingGroups] = useState(true);
+
+  // Fetch available groups from both employees and attendance tables
+  useEffect(() => {
+    const fetchGroups = async () => {
+      try {
+        setLoadingGroups(true);
+        const groupsSet = new Set<string>();
+
+        // Fetch groups from employees table
+        const employeesResponse = await fetch('/api/employees', {
+          cache: 'no-store',
+        });
+        const employeesData = await employeesResponse.json();
+
+        if (employeesData.success && employeesData.data) {
+          employeesData.data.forEach((emp: { group: string | null }) => {
+            if (emp.group) {
+              groupsSet.add(emp.group);
+            }
+          });
+        }
+
+        // Also fetch groups from attendance table (in case attendance has groups not in employees)
+        try {
+          const now = new Date();
+          const currentYear = now.getFullYear();
+          const currentMonth = now.getMonth() + 1;
+          const startDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`;
+          const endDate = `${currentYear}-${String(currentMonth).padStart(2, '0')}-31`;
+
+          const attendanceResponse = await fetch(
+            `/api/attendance?startDate=${startDate}&endDate=${endDate}`,
+            { cache: 'no-store' }
+          );
+          const attendanceData = await attendanceResponse.json();
+
+          if (attendanceData.success && attendanceData.data) {
+            attendanceData.data.forEach((record: { group?: string | null }) => {
+              if (record.group) {
+                groupsSet.add(record.group);
+              }
+            });
+          }
+        } catch (attendanceError) {
+          console.warn('Could not fetch groups from attendance:', attendanceError);
+        }
+
+        setAvailableGroups(Array.from(groupsSet).sort());
+      } catch (error) {
+        console.error('Error fetching groups:', error);
+      } finally {
+        setLoadingGroups(false);
+      }
+    };
+
+    fetchGroups();
+  }, []);
 
   const monthOptions = [
     { value: 1, label: "January" },
@@ -74,14 +130,25 @@ export const HierarchySelector = ({ onSelectionChange }: HierarchySelectorProps)
             <Select
               value={selection.group || ""}
               onValueChange={(value) => handleChange("group", value)}
+              disabled={loadingGroups}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select Group" />
+                <SelectValue placeholder={loadingGroups ? "Loading groups..." : "Select Group"} />
               </SelectTrigger>
               <SelectContent>
-                {hierarchyData.groups.map((group) => (
-                  <SelectItem key={group} value={group}>{group}</SelectItem>
-                ))}
+                {loadingGroups ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                ) : availableGroups.length === 0 ? (
+                  <div className="p-4 text-sm text-muted-foreground text-center">
+                    No groups found
+                  </div>
+                ) : (
+                  availableGroups.map((group) => (
+                    <SelectItem key={group} value={group}>{group}</SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>

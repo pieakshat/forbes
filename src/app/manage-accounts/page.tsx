@@ -1,13 +1,14 @@
-import GroupLeaderPanel from "@/components/views/GroupLeaderPanel";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import ManageAccountsPanel from "@/components/views/ManageAccountsPanel";
 
 // Force dynamic rendering since this page uses auth context
 export const dynamic = 'force-dynamic';
 
-export default function GroupLeaderPage() {
+export default function ManageAccountsPage() {
     return (
-        <ProtectedRoute allowedRoles={['leader', 'admin', 'manager']}>
-            <GroupLeaderPanel />
+        <ProtectedRoute allowedRoles={['admin']}>
+            <ManageAccountsPanel />
         </ProtectedRoute>
     );
 }
+

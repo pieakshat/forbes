@@ -49,10 +49,7 @@ export interface UploadResult {
 
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-/**
- * Service class for handling FG Completion CSV uploads
- * This contains all business logic and is server-side only
- */
+
 export class FGCompletionService {
     /**
      * Upload FG Completion CSV file
