@@ -48,7 +48,7 @@ random_attendance AS (
             WHEN random() < 0.85 THEN 'absent'::attendance_status       -- 10% absent
             WHEN random() < 0.93 THEN 'leave'::attendance_status       -- 8% leave
             WHEN random() < 0.98 THEN 'half_day'::attendance_status     -- 5% half_day
-            ELSE 'remote'::attendance_status                              -- 2% remote
+            
         END AS status,
         NOW() AS updated_at
     FROM employee_date_combinations

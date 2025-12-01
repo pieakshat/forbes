@@ -11,7 +11,7 @@ interface AttendanceRecord {
   id: number;
   token_no: string;
   attendance_date: string;
-  status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+  status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday';
   employee?: {
     name: string;
     group: string | null;
@@ -102,8 +102,6 @@ export function AttendanceTable({ refreshTrigger }: AttendanceTableProps) {
         return <Badge variant="outline">Half Day</Badge>;
       case "holiday":
         return <Badge className="bg-blue-500 hover:bg-blue-600">Holiday</Badge>;
-      case "remote":
-        return <Badge className="bg-purple-500 hover:bg-purple-600">Remote</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }

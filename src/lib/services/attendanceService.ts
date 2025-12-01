@@ -6,6 +6,8 @@ export interface Employee {
     group: string | null;
     desig: string | null;
     role: string | null;
+    employment_start_date: string | null;
+    employment_end_date: string | null;
     created_at: string;
 }
 
@@ -15,13 +17,15 @@ export interface EmployeeInput {
     group?: string | null;
     desig?: string | null;
     role?: string | null;
+    employment_start_date?: string | null;
+    employment_end_date?: string | null;
 }
 
 export interface AttendanceRecord {
     id: number;
     token_no: string;
     attendance_date: string;
-    status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+    status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday';
     group: string | null;
     check_in: string | null;
     check_out: string | null;
@@ -36,7 +40,7 @@ export interface AttendanceRecord {
 export interface AttendanceInput {
     token_no: string;
     attendance_date: string;
-    status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+    status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday';
     group?: string | null;
     notes?: string | null;
 }
@@ -87,9 +91,13 @@ export class AttendanceService {
             }
 
             // Now fetch all employees with explicit column selection
+            // Filter out employees whose employment period has ended
+            const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+
             const { data, error } = await supabase
                 .from('employees')
-                .select('token_no, name, group, desig, role, created_at')
+                .select('token_no, name, group, desig, role, employment_start_date, employment_end_date, created_at')
+                .or(`employment_end_date.is.null,employment_end_date.gte.${today}`)
                 .order('name', { ascending: true });
 
             if (error) {
@@ -188,7 +196,7 @@ export class AttendanceService {
             const supabase = await createClient();
 
             // Validate status
-            const validStatuses = ['present', 'absent', 'leave', 'half_day', 'holiday', 'remote'];
+            const validStatuses = ['present', 'absent', 'leave', 'half_day', 'holiday'];
             if (!validStatuses.includes(record.status)) {
                 return {
                     success: false,
@@ -360,14 +368,35 @@ export class AttendanceService {
                 };
             }
 
+            // Validate employment dates if provided
+            if (employee.employment_start_date && employee.employment_end_date) {
+                const startDate = new Date(employee.employment_start_date);
+                const endDate = new Date(employee.employment_end_date);
+
+                if (startDate > endDate) {
+                    return {
+                        success: false,
+                        error: 'Employment start date must be before or equal to end date',
+                    };
+                }
+            }
+
             // Sanitize input
-            const employeeData = {
+            const employeeData: any = {
                 token_no: employee.token_no.trim(),
                 name: employee.name.trim(),
                 group: employee.group?.trim() || null,
                 desig: employee.desig?.trim() || null,
                 role: employee.role?.trim() || null,
             };
+
+            // Add employment dates if provided
+            if (employee.employment_start_date) {
+                employeeData.employment_start_date = employee.employment_start_date;
+            }
+            if (employee.employment_end_date) {
+                employeeData.employment_end_date = employee.employment_end_date;
+            }
 
             // Insert employee
             const { data, error } = await supabase
@@ -422,6 +451,21 @@ export class AttendanceService {
                 };
             }
 
+            // Validate employment dates if both are being updated and both are not null
+            if (updates.employment_start_date !== undefined && updates.employment_end_date !== undefined) {
+                if (updates.employment_start_date && updates.employment_end_date) {
+                    const startDate = new Date(updates.employment_start_date);
+                    const endDate = new Date(updates.employment_end_date);
+
+                    if (startDate > endDate) {
+                        return {
+                            success: false,
+                            error: 'Employment start date must be before or equal to end date',
+                        };
+                    }
+                }
+            }
+
             // Prepare update data
             const updateData: any = {};
 
@@ -436,6 +480,12 @@ export class AttendanceService {
             }
             if (updates.role !== undefined) {
                 updateData.role = updates.role?.trim() || null;
+            }
+            if (updates.employment_start_date !== undefined) {
+                updateData.employment_start_date = updates.employment_start_date || null;
+            }
+            if (updates.employment_end_date !== undefined) {
+                updateData.employment_end_date = updates.employment_end_date || null;
             }
 
             // If token_no is being updated, check if new token_no already exists
@@ -493,7 +543,7 @@ export class AttendanceService {
         try {
             const supabase = await createClient();
 
-            // Check if employee exists
+
             const { data: existing, error: checkError } = await supabase
                 .from('employees')
                 .select('token_no')
@@ -524,6 +574,72 @@ export class AttendanceService {
             return { success: true };
         } catch (error) {
             console.error('AttendanceService deleteEmployee error:', error);
+            return {
+                success: false,
+                error: error instanceof Error ? error.message : 'Unknown error',
+            };
+        }
+    }
+
+    /**
+     * Clean up expired employees (remove employees whose employment_end_date has passed)
+     * This should be called periodically (e.g., via a cron job or scheduled task)
+     */
+    static async cleanupExpiredEmployees(): Promise<{
+        success: boolean;
+        deletedCount?: number;
+        error?: string;
+    }> {
+        try {
+            const supabase = await createClient();
+
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+
+            // Find all employees whose employment_end_date is before today
+            const { data: expiredEmployees, error: fetchError } = await supabase
+                .from('employees')
+                .select('token_no, name, employment_end_date')
+                .not('employment_end_date', 'is', null)
+                .lt('employment_end_date', today);
+
+            if (fetchError) {
+                console.error('Error fetching expired employees:', fetchError);
+                return {
+                    success: false,
+                    error: `Failed to fetch expired employees: ${fetchError.message}`,
+                };
+            }
+
+            if (!expiredEmployees || expiredEmployees.length === 0) {
+                return {
+                    success: true,
+                    deletedCount: 0,
+                };
+            }
+
+            // Delete expired employees
+            const tokenNos = expiredEmployees.map(emp => emp.token_no);
+            const { error: deleteError } = await supabase
+                .from('employees')
+                .delete()
+                .in('token_no', tokenNos);
+
+            if (deleteError) {
+                console.error('Error deleting expired employees:', deleteError);
+                return {
+                    success: false,
+                    error: `Failed to delete expired employees: ${deleteError.message}`,
+                };
+            }
+
+            console.log(`Successfully removed ${expiredEmployees.length} expired employee(s)`);
+            return {
+                success: true,
+                deletedCount: expiredEmployees.length,
+            };
+        } catch (error) {
+            console.error('AttendanceService cleanupExpiredEmployees error:', error);
             return {
                 success: false,
                 error: error instanceof Error ? error.message : 'Unknown error',

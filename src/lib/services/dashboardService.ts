@@ -8,7 +8,6 @@ import type {
     DashboardChartPoint,
     DashboardMetricsResult,
     DashboardTableData,
-    DashboardTableRow,
 } from '@/types/dashboard';
 
 type AttendanceStatus =
@@ -17,7 +16,6 @@ type AttendanceStatus =
     | 'leave'
     | 'half_day'
     | 'holiday'
-    | 'remote';
 
 interface AttendanceRecordSlim {
     token_no: string;
@@ -58,7 +56,6 @@ const ABSENCE_WEIGHTS: Record<AttendanceStatus, number> = {
     leave: 1,
     half_day: 0.5,
     holiday: 0,
-    remote: 0,
 };
 
 const FG_GROUP_COLUMNS = ['Class', 'Dept Code', 'Item Type', 'FG Under FG'] as const;
@@ -67,7 +64,6 @@ function toDateKey(value: string | null): string | null {
     if (!value) return null;
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) {
-        // Try to parse as YYYY-MM-DD without timezone
         const normalized = value.replace(/T.+$/, '');
         return normalized || null;
     }
@@ -127,7 +123,6 @@ export class DashboardService {
 
         const supabase = await createClient();
 
-        // Fetch employees for the group
         const { data: employees, error: employeesError } = await supabase
             .from('employees')
             .select('token_no, group')
@@ -142,8 +137,6 @@ export class DashboardService {
         const employeeList = (employees || []) as EmployeeSlim[];
         const tokenNos = employeeList.map((employee) => employee.token_no);
 
-        // Attendance records filtered by group and date range
-        // Note: Now filtering by the group column in attendance table
         const { data: attendanceData, error: attendanceError } = await supabase
             .from('attendance')
             .select('token_no, attendance_date, status')
@@ -157,11 +150,8 @@ export class DashboardService {
 
         const attendanceRecords = (attendanceData || []) as AttendanceRecordSlim[];
 
-        // Calculate manpower from attendance records if no employees found
-        // This handles cases where attendance has group data but employees table doesn't
         let manpowerPerDay = employeeList.length;
         if (manpowerPerDay === 0 && attendanceRecords.length > 0) {
-            // Get unique token_nos from attendance records for this group
             const uniqueTokens = new Set(attendanceRecords.map(r => r.token_no));
             manpowerPerDay = uniqueTokens.size;
             console.warn(
@@ -171,7 +161,6 @@ export class DashboardService {
             );
         }
 
-        // Debug logging to help diagnose attendance issues
         if (attendanceRecords.length === 0) {
             console.warn(
                 `No attendance records found for group "${group}" in date range ${startDateKey} to ${endDateKey}. ` +
@@ -179,7 +168,6 @@ export class DashboardService {
             );
         }
 
-        // Reduce attendance into date map with weighted absences
         const attendanceAbsenceMap = new Map<string, number>();
         for (const record of attendanceRecords) {
             const dateKey = record.attendance_date;
@@ -199,7 +187,6 @@ export class DashboardService {
             absenceByDate.set(dateKey, current + weight);
         });
 
-        // Fetch FG completion data
         const { data: fgDataRaw, error: fgError } = await supabase
             .from('FG_Completion')
             .select(
@@ -215,7 +202,6 @@ export class DashboardService {
         const fgData = (fgDataRaw || []) as FGCompletionRecordSlim[];
         const filteredFgData = fgData.filter((record) => isGroupMatch(record, group));
 
-        // Debug logging to help diagnose matching issues
         if (fgData.length > 0 && filteredFgData.length === 0) {
             console.warn(
                 `No FG completion records matched for group "${group}". ` +
@@ -244,7 +230,6 @@ export class DashboardService {
             fgByDate.set(dateKey, current);
         }
 
-        // Formula constant: 435/17 = 25.588235...
         const CAPACITY_FACTOR = 435 / 17;
 
         const dayMetrics: DayMetrics[] = [];
@@ -263,28 +248,22 @@ export class DashboardService {
             const manpower = manpowerPerDay;
             const absentees = absenceByDate.get(dateKey) ?? 0;
 
-            // Absenteeism (%) = Absentees (Nos) / Manpower
             const absenteeismPercent =
                 manpower > 0 ? (absentees / manpower) * 100 : 0;
 
-            // Indexed Capacity (at 100%) = Manpower x (435/17)
             const indexedCapacityAt100 = manpower * CAPACITY_FACTOR;
 
-            // Indexed-FG completion: Fetched from FG completion data
             const fgEntry = fgByDate.get(dateKey) ?? { indexFactor: 0, indexQty: 0 };
             const indexedFgCompletionValue = fgEntry.indexQty;
 
-            // Index - FG completion (%) = (Indexed-FG completion / Indexed Capacity at 100%) x 100
             const indexedFgCompletionPercent =
                 indexedCapacityAt100 > 0
                     ? (indexedFgCompletionValue / indexedCapacityAt100) * 100
                     : 0;
 
-            // Indexed Capacity (with Actual Absenteeism) = [Indexed Capacity (at 100%)] x [1 - Absenteeism (%)]
             const indexedCapacityWithAbsence =
                 indexedCapacityAt100 * (1 - absenteeismPercent / 100);
 
-            // % Capacity Utilisation with Absenteeism = Index - FG completion / Indexed Capacity (with Actual Absenteeism)
             const capacityUtilizationPercent =
                 indexedCapacityWithAbsence > 0
                     ? (indexedFgCompletionValue / indexedCapacityWithAbsence) * 100
@@ -452,7 +431,6 @@ export class DashboardService {
 
         const supabase = await createClient();
 
-        // Fetch all employees (not filtered by group)
         const { data: employees, error: employeesError } = await supabase
             .from('employees')
             .select('token_no, group')
@@ -467,7 +445,6 @@ export class DashboardService {
         const employeeList = (employees || []) as EmployeeSlim[];
         const tokenNos = employeeList.map((employee) => employee.token_no);
 
-        // Get unique groups count
         const uniqueGroups = new Set(
             employeeList
                 .map((emp) => emp.group)
@@ -475,10 +452,8 @@ export class DashboardService {
         );
         const activeGroupsCount = uniqueGroups.size;
 
-        // Calculate manpower per day (total employees)
         const manpowerPerDay = employeeList.length;
 
-        // Attendance records chunked by token
         const attendanceRecords: AttendanceRecordSlim[] = [];
         const attendanceChunkSize = 100;
 
@@ -500,7 +475,6 @@ export class DashboardService {
             }
         }
 
-        // Reduce attendance into date map with weighted absences
         const attendanceAbsenceMap = new Map<string, number>();
         for (const record of attendanceRecords) {
             const dateKey = record.attendance_date;
@@ -520,7 +494,6 @@ export class DashboardService {
             absenceByDate.set(dateKey, current + weight);
         });
 
-        // Fetch all FG completion data (not filtered by group)
         const { data: fgDataRaw, error: fgError } = await supabase
             .from('FG_Completion')
             .select(
@@ -552,7 +525,6 @@ export class DashboardService {
             fgByDate.set(dateKey, current);
         }
 
-        // Formula constant: 435/17 = 25.588235...
         const CAPACITY_FACTOR = 435 / 17;
 
         const dayMetrics: DayMetrics[] = [];

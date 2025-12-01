@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -13,6 +12,8 @@ interface Employee {
   group: string | null;
   desig: string | null;
   role: string | null;
+  employment_start_date: string | null;
+  employment_end_date: string | null;
   created_at: string;
 }
 
@@ -27,21 +28,32 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingTokenNo, setEditingTokenNo] = useState<string | null>(null);
+
+  // Get today's date in YYYY-MM-DD format for default start date
+  const getTodayDate = () => {
+    const today = new Date();
+    return today.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState<{
     name: string;
     token_no: string;
     desig: string;
     group: string;
     role: string;
+    employment_start_date: string;
+    employment_end_date: string;
   }>({
     name: "",
     token_no: "",
     desig: "",
     group: "",
     role: "",
+    employment_start_date: getTodayDate(),
+    employment_end_date: "",
   });
 
-  // Fetch employees on component mount and when refreshTrigger changes
+
   useEffect(() => {
     console.log('EmployeeForm mounted or refreshTrigger changed, fetching employees...', { refreshTrigger });
     // Clear any existing employees first to ensure fresh state
@@ -134,6 +146,8 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
       desig: "",
       group: "",
       role: "",
+      employment_start_date: getTodayDate(),
+      employment_end_date: "",
     });
     setEditingTokenNo(null);
   };
@@ -230,6 +244,8 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
       desig: employee.desig || "",
       group: employee.group || "",
       role: employee.role || "",
+      employment_start_date: employee.employment_start_date || "",
+      employment_end_date: employee.employment_end_date || "",
     });
     setEditingTokenNo(employee.token_no);
   };
@@ -324,6 +340,26 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
           />
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="employment_start_date">Employment Start Date</Label>
+          <Input
+            id="employment_start_date"
+            type="date"
+            value={formData.employment_start_date}
+            onChange={(e) => setFormData({ ...formData, employment_start_date: e.target.value })}
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="employment_end_date">Employment End Date</Label>
+          <Input
+            id="employment_end_date"
+            type="date"
+            value={formData.employment_end_date}
+            onChange={(e) => setFormData({ ...formData, employment_end_date: e.target.value })}
+          />
+        </div>
+
         <div className="flex items-end gap-2">
           <Button type="submit" className="flex-1" disabled={saving}>
             {saving ? (
@@ -363,13 +399,15 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
                 <TableHead>Designation</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Group</TableHead>
+                <TableHead>Start Date</TableHead>
+                <TableHead>End Date</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {employees.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={8} className="text-center text-muted-foreground py-8">
                     No employees found
                   </TableCell>
                 </TableRow>
@@ -381,6 +419,8 @@ export function EmployeeForm({ onEmployeeUpdate, refreshTrigger }: EmployeeFormP
                     <TableCell>{employee.desig || '-'}</TableCell>
                     <TableCell>{employee.role || '-'}</TableCell>
                     <TableCell>{employee.group || '-'}</TableCell>
+                    <TableCell>{employee.employment_start_date ? new Date(employee.employment_start_date).toLocaleDateString() : '-'}</TableCell>
+                    <TableCell>{employee.employment_end_date ? new Date(employee.employment_end_date).toLocaleDateString() : '-'}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="ghost"

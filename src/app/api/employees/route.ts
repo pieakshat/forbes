@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/lib/api/auth';
 import { AttendanceService, EmployeeInput } from '@/lib/services/attendanceService';
 
-// Disable caching for this route
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -26,7 +25,12 @@ export async function GET(request: NextRequest) {
 
         console.log(`Fetching employees for user: ${user.email} (role: ${user.role})`);
 
-        // Fetch employees
+
+        AttendanceService.cleanupExpiredEmployees().catch(err => {
+            console.error('Background cleanup failed:', err);
+        });
+
+
         const result = await AttendanceService.getEmployees();
 
         console.log('getEmployees result:', {
@@ -68,7 +72,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
     try {
-        // Verify authentication - only leaders and admins can create employees
+
         const { user, error: authError } = await verifyAuth(['leader', 'admin']);
 
         if (authError || !user) {
@@ -78,10 +82,8 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Parse request body
         const body = await request.json();
 
-        // Validate required fields
         if (!body.token_no || !body.name) {
             return NextResponse.json(
                 { error: 'Token number and name are required' },
@@ -95,6 +97,8 @@ export async function POST(request: NextRequest) {
             group: body.group || null,
             desig: body.desig || body.designation || null,
             role: body.role || null,
+            employment_start_date: body.employment_start_date || null,
+            employment_end_date: body.employment_end_date || null,
         };
 
         const result = await AttendanceService.createEmployee(employeeData);
@@ -155,6 +159,8 @@ export async function PUT(request: NextRequest) {
         if (body.designation !== undefined) updates.desig = body.designation;
         if (body.role !== undefined) updates.role = body.role;
         if (body.new_token_no !== undefined) updates.token_no = body.new_token_no;
+        if (body.employment_start_date !== undefined) updates.employment_start_date = body.employment_start_date || null;
+        if (body.employment_end_date !== undefined) updates.employment_end_date = body.employment_end_date || null;
 
         const result = await AttendanceService.updateEmployee(body.token_no, updates);
 

@@ -10,7 +10,7 @@ interface AttendanceRecord {
   id: number;
   token_no: string;
   attendance_date: string;
-  status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday' | 'remote';
+  status: 'present' | 'absent' | 'leave' | 'half_day' | 'holiday';
   employee?: {
     name: string;
     group: string | null;
@@ -25,6 +25,8 @@ interface Employee {
   group: string | null;
   desig: string | null;
   role: string | null;
+  employment_start_date: string | null;
+  employment_end_date: string | null;
 }
 
 export function GroupSummary() {
