@@ -21,6 +21,7 @@ import {
   Loader2
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 import type { DashboardMeta, DashboardMetricsResult, DashboardSummary } from "@/types/dashboard";
 
 const Dashboard = () => {
@@ -35,6 +36,23 @@ const Dashboard = () => {
   const [activeGroupsCount, setActiveGroupsCount] = useState<number | null>(null);
   const [isLoadingAggregated, setIsLoadingAggregated] = useState(false);
   const { user } = useAuth();
+  const router = useRouter();
+
+  // Redirect admin from /dashboard to /group-leader, but only if they didn't intentionally navigate here
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      const hasIntentionalAccess = typeof window !== 'undefined' &&
+        sessionStorage.getItem('admin_dashboard_access') === 'true';
+
+      if (!hasIntentionalAccess) {
+        // Admin landed here directly (not via button), redirect them
+        router.push('/group-leader');
+      } else {
+        // Admin intentionally navigated here, clear the flag so it doesn't persist
+        sessionStorage.removeItem('admin_dashboard_access');
+      }
+    }
+  }, [user, router]);
 
   const handleHierarchyChange = (selection: HierarchySelection) => {
     setSelectedHierarchy(selection);

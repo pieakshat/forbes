@@ -8,7 +8,6 @@ import {
     Settings,
     ChevronDown,
     BarChart3,
-    TrendingUp,
     Users
 } from "lucide-react";
 import {
@@ -20,11 +19,12 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 export const DashboardNavbar = () => {
     const { user, signOut } = useAuth();
     const router = useRouter();
+    const pathname = usePathname();
 
     const handleLogout = async () => {
         await signOut();
@@ -34,9 +34,25 @@ export const DashboardNavbar = () => {
         router.push('/group-leader');
     };
 
+    const handleViewDashboard = () => {
+        // Mark in sessionStorage that admin intentionally navigated to dashboard
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('admin_dashboard_access', 'true');
+        }
+        router.push('/dashboard');
+    };
+
     const handleManageAccounts = () => {
         router.push('/manage-accounts');
     };
+
+    // Determine button visibility and behavior
+    const isAdmin = user?.role === 'admin';
+    const isOnGroupLeaderPage = pathname === '/group-leader';
+    const isOnDashboardPage = pathname === '/dashboard';
+    const showButton = isAdmin; // Only show for admin
+    const buttonText = isOnGroupLeaderPage ? 'View Dashboard' : 'Manage Employees';
+    const buttonAction = isOnGroupLeaderPage ? handleViewDashboard : handleManageEmployees;
 
     return (
         <header className="border-b bg-card shadow-sm">
@@ -54,15 +70,21 @@ export const DashboardNavbar = () => {
                 </div>
 
                 <div className="flex items-center space-x-4">
-                    {/* Manage Employees Button */}
-                    <Button
-                        variant="outline"
-                        onClick={handleManageEmployees}
-                        className="flex items-center space-x-2"
-                    >
-                        <Users className="w-4 h-4" />
-                        <span className="hidden md:inline">Manage Employees</span>
-                    </Button>
+                    {/* Manage Employees / View Dashboard Button - Only visible for admin */}
+                    {showButton && (
+                        <Button
+                            variant="outline"
+                            onClick={buttonAction}
+                            className="flex items-center space-x-2"
+                        >
+                            {isOnGroupLeaderPage ? (
+                                <BarChart3 className="w-4 h-4" />
+                            ) : (
+                                <Users className="w-4 h-4" />
+                            )}
+                            <span className="hidden md:inline">{buttonText}</span>
+                        </Button>
+                    )}
 
                     {/* User Menu */}
                     <DropdownMenu>
