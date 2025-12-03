@@ -60,6 +60,23 @@ const ABSENCE_WEIGHTS: Record<AttendanceStatus, number> = {
 
 const FG_GROUP_COLUMNS = ['Class', 'Dept Code', 'Item Type', 'FG Under FG'] as const;
 
+/**
+ * Group mapping: Maps employee group names to FG Completion group values
+ * This allows flexibility when group names differ between systems
+ * Format: { employeeGroup: [fgCompletionValues] }
+ * 
+ * If a group is not in this mapping, it will try direct matching.
+ * If ALL_GROUPS_SHARE_FG_DATA is true, all groups will match all FG data regardless of group columns.
+ */
+const ALL_GROUPS_SHARE_FG_DATA = true; // Set to true if all groups should aggregate the same FG Completion data
+
+const GROUP_MAPPING: Record<string, string[]> = {
+    'G1': ['C3A'],  // Map G1 to C3A in Class column
+    'G2': ['C3A'],  // Map G2 to C3A in Class column (if they share the same production data)
+    // Add more mappings as needed:
+    // 'G3': ['C3C'],
+};
+
 function toDateKey(value: string | null): string | null {
     if (!value) return null;
     const date = new Date(value);
@@ -79,12 +96,31 @@ function formatChartLabel(date: Date): string {
 }
 
 function isGroupMatch(record: FGCompletionRecordSlim, group: string): boolean {
+    // If all groups share FG data, match all records regardless of group columns
+    if (ALL_GROUPS_SHARE_FG_DATA) {
+        return true;
+    }
+
     const normalizedTarget = group.trim().toLowerCase();
-    return FG_GROUP_COLUMNS.some((column) => {
+
+    // Check if there's a mapping for this group
+    const mappedValues = GROUP_MAPPING[group] || [];
+    const allTargetValues = [normalizedTarget, ...mappedValues.map(v => v.trim().toLowerCase())];
+
+    const matches = FG_GROUP_COLUMNS.some((column) => {
         const value = record[column];
         if (!value || typeof value !== 'string') return false;
-        return value.trim().toLowerCase() === normalizedTarget;
+        const normalizedValue = value.trim().toLowerCase();
+
+        // Check if value matches any of the target values (direct match or mapped)
+        const isMatch = allTargetValues.some(target => normalizedValue === target);
+
+        if (isMatch) {
+            console.log(`[DashboardService] Group match found: "${group}" matches "${value}" in column "${column}"`);
+        }
+        return isMatch;
     });
+    return matches;
 }
 
 function round(value: number, decimals = 2): number {
@@ -187,30 +223,80 @@ export class DashboardService {
             absenceByDate.set(dateKey, current + weight);
         });
 
-        const { data: fgDataRaw, error: fgError } = await supabase
-            .from('FG_Completion')
-            .select(
-                '"Transaction Date","Index factor","Index Qty","Class","Dept Code","Item Type","FG Under FG"',
-            )
-            .gte('"Transaction Date"', startDateKey)
-            .lte('"Transaction Date"', endDateKey);
+        // Fetch FG Completion data with pagination to handle large datasets (Supabase default limit is 1000)
+        const fgData: FGCompletionRecordSlim[] = [];
+        const PAGE_SIZE = 1000;
+        let page = 0;
+        let hasMore = true;
 
-        if (fgError) {
-            throw new Error(`Failed to fetch FG completion data: ${fgError.message}`);
+        while (hasMore) {
+            const from = page * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data: fgDataRaw, error: fgError } = await supabase
+                .from('FG_Completion')
+                .select(
+                    '"Transaction Date","Index factor","Index Qty","Class","Dept Code","Item Type","FG Under FG"',
+                )
+                .gte('"Transaction Date"', startDateKey)
+                .lte('"Transaction Date"', endDateKey)
+                .range(from, to);
+
+            if (fgError) {
+                throw new Error(`Failed to fetch FG completion data: ${fgError.message}`);
+            }
+
+            if (fgDataRaw && fgDataRaw.length > 0) {
+                fgData.push(...(fgDataRaw as FGCompletionRecordSlim[]));
+                hasMore = fgDataRaw.length === PAGE_SIZE;
+                page++;
+                console.log(`[DashboardService] Fetched page ${page}: ${fgDataRaw.length} records (total so far: ${fgData.length})`);
+            } else {
+                hasMore = false;
+            }
         }
 
-        const fgData = (fgDataRaw || []) as FGCompletionRecordSlim[];
+        // Debug logging
+        console.log(`[DashboardService] Fetching metrics for group: "${group}"`);
+        console.log(`[DashboardService] Date range: ${startDateKey} to ${endDateKey}`);
+        console.log(`[DashboardService] Total FG records fetched: ${fgData.length}`);
+
+        if (fgData.length > 0) {
+            console.log(`[DashboardService] Sample FG record:`, {
+                'Transaction Date': fgData[0]?.['Transaction Date'],
+                'Index Qty': fgData[0]?.['Index Qty'],
+                'Index factor': fgData[0]?.['Index factor'],
+                'Class': fgData[0]?.['Class'],
+                'Dept Code': fgData[0]?.['Dept Code'],
+                'Item Type': fgData[0]?.['Item Type'],
+                'FG Under FG': fgData[0]?.['FG Under FG'],
+            });
+        }
+
         const filteredFgData = fgData.filter((record) => isGroupMatch(record, group));
+        console.log(`[DashboardService] Filtered FG records after group matching: ${filteredFgData.length}`);
 
         if (fgData.length > 0 && filteredFgData.length === 0) {
             console.warn(
-                `No FG completion records matched for group "${group}". ` +
+                `[DashboardService] No FG completion records matched for group "${group}". ` +
                 `Total FG records: ${fgData.length}. ` +
                 `Sample FG record columns: Class="${fgData[0]?.['Class']}", ` +
                 `Dept Code="${fgData[0]?.['Dept Code']}", ` +
                 `Item Type="${fgData[0]?.['Item Type']}", ` +
                 `FG Under FG="${fgData[0]?.['FG Under FG']}"`
             );
+
+            // Show unique values in group columns for debugging
+            const uniqueClasses = Array.from(new Set(fgData.map(r => r['Class']).filter(Boolean)));
+            const uniqueDeptCodes = Array.from(new Set(fgData.map(r => r['Dept Code']).filter(Boolean)));
+            const uniqueItemTypes = Array.from(new Set(fgData.map(r => r['Item Type']).filter(Boolean)));
+            const uniqueFgUnderFg = Array.from(new Set(fgData.map(r => r['FG Under FG']).filter(Boolean)));
+            console.log(`[DashboardService] Unique values in FG records:`, {
+                Classes: uniqueClasses,
+                DeptCodes: uniqueDeptCodes,
+                ItemTypes: uniqueItemTypes,
+                FgUnderFg: uniqueFgUnderFg,
+            });
         }
 
         const fgByDate = new Map<
@@ -220,15 +306,29 @@ export class DashboardService {
 
         for (const record of filteredFgData) {
             const dateKey = toDateKey(record['Transaction Date']);
-            if (!dateKey) continue;
+            if (!dateKey) {
+                console.warn(`[DashboardService] Skipping record with invalid date:`, record['Transaction Date']);
+                continue;
+            }
             const indexFactor = record['Index factor'] ?? 0;
             const indexQty = record['Index Qty'] ?? 0;
+
+            if (indexQty === 0 && indexFactor === 0) {
+                console.warn(`[DashboardService] Record with zero values:`, {
+                    date: dateKey,
+                    indexQty,
+                    indexFactor,
+                });
+            }
 
             const current = fgByDate.get(dateKey) ?? { indexFactor: 0, indexQty: 0 };
             current.indexFactor += indexFactor;
             current.indexQty += indexQty;
             fgByDate.set(dateKey, current);
         }
+
+        console.log(`[DashboardService] FG data aggregated by date:`, Array.from(fgByDate.entries()).slice(0, 5));
+        console.log(`[DashboardService] Total dates with FG data: ${fgByDate.size}`);
 
         const CAPACITY_FACTOR = 435 / 17;
 
@@ -255,6 +355,16 @@ export class DashboardService {
 
             const fgEntry = fgByDate.get(dateKey) ?? { indexFactor: 0, indexQty: 0 };
             const indexedFgCompletionValue = fgEntry.indexQty;
+
+            // Debug first few days
+            if (i < 3) {
+                console.log(`[DashboardService] Day ${i + 1} (${dateKey}):`, {
+                    manpower,
+                    indexedCapacityAt100: round(indexedCapacityAt100, 2),
+                    fgEntry,
+                    indexedFgCompletionValue,
+                });
+            }
 
             const indexedFgCompletionPercent =
                 indexedCapacityAt100 > 0
@@ -494,19 +604,38 @@ export class DashboardService {
             absenceByDate.set(dateKey, current + weight);
         });
 
-        const { data: fgDataRaw, error: fgError } = await supabase
-            .from('FG_Completion')
-            .select(
-                '"Transaction Date","Index factor","Index Qty","Class","Dept Code","Item Type","FG Under FG"',
-            )
-            .gte('"Transaction Date"', startDateKey)
-            .lte('"Transaction Date"', endDateKey);
+        // Fetch FG Completion data with pagination to handle large datasets (Supabase default limit is 1000)
+        const fgData: FGCompletionRecordSlim[] = [];
+        const PAGE_SIZE = 1000;
+        let page = 0;
+        let hasMore = true;
 
-        if (fgError) {
-            throw new Error(`Failed to fetch FG completion data: ${fgError.message}`);
+        while (hasMore) {
+            const from = page * PAGE_SIZE;
+            const to = from + PAGE_SIZE - 1;
+
+            const { data: fgDataRaw, error: fgError } = await supabase
+                .from('FG_Completion')
+                .select(
+                    '"Transaction Date","Index factor","Index Qty","Class","Dept Code","Item Type","FG Under FG"',
+                )
+                .gte('"Transaction Date"', startDateKey)
+                .lte('"Transaction Date"', endDateKey)
+                .range(from, to);
+
+            if (fgError) {
+                throw new Error(`Failed to fetch FG completion data: ${fgError.message}`);
+            }
+
+            if (fgDataRaw && fgDataRaw.length > 0) {
+                fgData.push(...(fgDataRaw as FGCompletionRecordSlim[]));
+                hasMore = fgDataRaw.length === PAGE_SIZE;
+                page++;
+                console.log(`[DashboardService] Fetched page ${page}: ${fgDataRaw.length} records (total so far: ${fgData.length})`);
+            } else {
+                hasMore = false;
+            }
         }
-
-        const fgData = (fgDataRaw || []) as FGCompletionRecordSlim[];
 
         const fgByDate = new Map<
             string,
