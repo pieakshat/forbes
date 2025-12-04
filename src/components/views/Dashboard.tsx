@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { HierarchySelector, HierarchySelection } from "@/components/navigation/HierarchySelector";
 import { DataTable, TableData } from "@/components/dashboard/DataTable";
-import { PerformanceChart, ChartData, mockChartData } from "@/components/dashboard/PerformanceChart";
+import { PerformanceChart, ChartData } from "@/components/dashboard/PerformanceChart";
 import { ReportUpload } from "@/components/reports/ReportUpload";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -422,7 +422,7 @@ const Dashboard = () => {
                 <CardContent>
                   <PerformanceChart
                     title="Monthly Comparison"
-                    data={(chartData.length ? chartData : mockChartData).slice(0, 12)}
+                    data={(chartData).slice(0, 12)}
                     type="line"
                     showLegend={false}
                   />
